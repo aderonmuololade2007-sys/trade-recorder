@@ -405,8 +405,13 @@ class TradingJournal {
         const avgRR = ratios.length > 0 ? (ratios.reduce((a, b) => a + b) / ratios.length).toFixed(2) : 0;
         const avgLot = total > 0 ? (this.trades.reduce((s,t)=> s + (t.lotSize||0),0)/total).toFixed(2) : 0;
 
-        // log for debugging
+        // log for debugging and show on page
         console.log('updateStatistics', { total, wins, winRate, totalPL, avgRR, avgLot });
+        const dbg = document.getElementById('statsDebug');
+        if (dbg) {
+            dbg.style.display = 'block';
+            dbg.textContent = `DEBUG stat values: total=${total} wins=${wins} winRate=${winRate} totalPL=${totalPL} avgRR=${avgRR} avgLot=${avgLot}`;
+        }
 
         document.getElementById('totalTrades').textContent = total;
         document.getElementById('winRate').textContent = winRate + '%';
