@@ -4,6 +4,9 @@
 // ============================================
 
 // Firebase authentication helpers
+// debugging: log current origin and protocol for localStorage context
+console.log('app loaded at', location.href, 'protocol', location.protocol);
+
 function showOverlay(show) {
     const overlay = document.getElementById('loginOverlay');
     if (show) {
