@@ -433,10 +433,42 @@ class TradingJournal {
 
     updateChart() {
         if (!this.chart) return;
-        const labels = this.trades.map(t => this.formatDate(t.date));
-        const data = this.trades.map(t => t.profitLoss || 0);
+        // show trades in chronological order (oldest -> newest)
+        const sorted = [...this.trades].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+        const labels = sorted.map(t => this.formatDate(t.date));
+        const data = sorted.map(t => t.profitLoss || 0);
+
+        // color points by win/loss (green for profit, red for loss, gray for pending)
+        const pointColors = sorted.map(t => {
+            if (t.result === 'Win') return '#06d6a0';
+            if (t.result === 'Loss') return '#e63946';
+            return '#888';
+        });
+
         this.chart.data.labels = labels;
         this.chart.data.datasets[0].data = data;
+        this.chart.data.datasets[0].pointBackgroundColor = pointColors;
+        this.chart.data.datasets[0].pointRadius = 6;
+        this.chart.options.plugins = this.chart.options.plugins || {};
+        // custom tooltip to show trade details
+        this.chart.options.plugins.tooltip = {
+            callbacks: {
+                label: (ctx) => {
+                    const idx = ctx.dataIndex;
+                    const trade = sorted[idx];
+                    if (!trade) return '';
+                    const pl = (trade.profitLoss || 0);
+                    return `${trade.pair} • ${trade.type} • P/L: ${pl >= 0 ? '+' : ''}${pl} pips`;
+                },
+                afterLabel: (ctx) => {
+                    const idx = ctx.dataIndex;
+                    const trade = sorted[idx];
+                    if (!trade) return '';
+                    return `Entry: ${trade.entryPoint || 'N/A'}  Exit: ${trade.exitPoint || 'N/A'}`;
+                }
+            }
+        };
+
         this.chart.update();
     }
 
