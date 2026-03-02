@@ -98,6 +98,11 @@ class TradingJournal {
     constructor() {
         this.trades = [];
         this.loadTrades();
+        // clear any previously retained filters so all trades show initially
+        const fp = document.getElementById('filterPair');
+        const fr = document.getElementById('filterResult');
+        if (fp) fp.value = '';
+        if (fr) fr.value = '';
         this.initializeEventListeners();
         this.setTodayDate();
         this.renderTrades();
@@ -112,8 +117,25 @@ class TradingJournal {
         console.log('loadTrades raw', stored);
         try {
             this.trades = stored ? JSON.parse(stored) : [];
-            // ensure old entries have lotSize field
-            this.trades = this.trades.map(t => ({ ...t, lotSize: typeof t.lotSize === 'number' ? t.lotSize : 0 }));
+            // sanitize fields for older entries
+            this.trades = this.trades.map(t => {
+                // enforce numeric values and defaults
+                const entryPoint = parseFloat(t.entryPoint);
+                const stopLoss = parseFloat(t.stopLoss);
+                const takeProfit = parseFloat(t.takeProfit);
+                const exitPoint = t.exitPoint != null ? parseFloat(t.exitPoint) : null;
+                const profitLoss = parseFloat(t.profitLoss);
+                const lotSize = parseFloat(t.lotSize);
+                return {
+                    ...t,
+                    entryPoint: !isNaN(entryPoint) ? entryPoint : 0,
+                    stopLoss: !isNaN(stopLoss) ? stopLoss : 0,
+                    takeProfit: !isNaN(takeProfit) ? takeProfit : 0,
+                    exitPoint: exitPoint !== null && !isNaN(exitPoint) ? exitPoint : null,
+                    profitLoss: !isNaN(profitLoss) ? profitLoss : 0,
+                    lotSize: !isNaN(lotSize) ? lotSize : 0,
+                };
+            });
         } catch (e) {
             console.error('Failed to parse stored trades', e);
             // clear corrupted data
@@ -292,6 +314,11 @@ class TradingJournal {
         filterPair.value = currentValue;
     }
 
+    // Utility for safely formatting numbers that may be null/undefined
+    formatNumber(value, decimals = 4) {
+        return (typeof value === 'number' && !isNaN(value)) ? value.toFixed(decimals) : '—';
+    }
+
     // Create trade card HTML
     createTradeCard(trade) {
         const resultBadge = this.getResultBadge(trade.result);
@@ -315,15 +342,15 @@ class TradingJournal {
                 <div class="trade-details">
                     <div class="trade-detail">
                         <div class="trade-detail-label">Entry</div>
-                        <div class="trade-detail-value">${trade.entryPoint.toFixed(4)}</div>
+                        <div class="trade-detail-value">${this.formatNumber(trade.entryPoint,4)}</div>
                     </div>
                     <div class="trade-detail">
                         <div class="trade-detail-label">Stop Loss</div>
-                        <div class="trade-detail-value">${trade.stopLoss.toFixed(4)}</div>
+                        <div class="trade-detail-value">${this.formatNumber(trade.stopLoss,4)}</div>
                     </div>
                     <div class="trade-detail">
                         <div class="trade-detail-label">Take Profit</div>
-                        <div class="trade-detail-value">${trade.takeProfit.toFixed(4)}</div>
+                        <div class="trade-detail-value">${this.formatNumber(trade.takeProfit,4)}</div>
                     </div>
                     <div class="trade-detail">
                         <div class="trade-detail-label">R:R Ratio</div>
@@ -332,16 +359,16 @@ class TradingJournal {
                     ${trade.exitPoint ? `
                     <div class="trade-detail">
                         <div class="trade-detail-label">Exit</div>
-                        <div class="trade-detail-value">${trade.exitPoint.toFixed(4)}</div>
+                        <div class="trade-detail-value">${this.formatNumber(trade.exitPoint,4)}</div>
                     </div>
                     ` : ''}
                     <div class="trade-detail">
                         <div class="trade-detail-label">P/L (Pips)</div>
-                        <div class="trade-detail-value ${profitLossClass}">${profitLossSymbol}${trade.profitLoss.toFixed(1)}</div>
+                        <div class="trade-detail-value ${profitLossClass}">${profitLossSymbol}${this.formatNumber(trade.profitLoss,1)}</div>
                     </div>
                     <div class="trade-detail">
                         <div class="trade-detail-label">Lot Size</div>
-                        <div class="trade-detail-value">${(trade.lotSize||0).toFixed(2)}</div>
+                        <div class="trade-detail-value">${this.formatNumber(trade.lotSize,2)}</div>
                     </div>
                 </div>
 
