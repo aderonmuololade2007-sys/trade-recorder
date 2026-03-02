@@ -251,7 +251,7 @@ class TradingJournal {
             const resultMatch = !filterResult || trade.result === filterResult;
             return pairMatch && resultMatch;
         });
-        console.log('filteredTrades count', filteredTrades.length);
+        console.log('filteredTrades count', filteredTrades.length, 'details', filteredTrades);
 
         // Update pair filter options
         this.updateFilterOptions();
