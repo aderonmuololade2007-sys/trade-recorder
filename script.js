@@ -466,9 +466,18 @@ class TradingJournal {
             return this.analyzeSMCConcepts(trades);
         }
 
-        // trade-specific advice
+        // trade-specific advice (explicit)
         if (questionLower.includes('last trade') || questionLower.includes('recent trade') || questionLower.includes('this trade')) {
             return this.analyzeTradeImprovements(trades);
+        }
+
+        // catch-all for any trade related question
+        if (questionLower.includes('trade')) {
+            // combine last trade analysis with psychological tips and general insights
+            let resp = this.analyzeTradeImprovements(trades);
+            resp += this.analyzePsychology();
+            resp += this.generateGeneralInsights(trades);
+            return resp;
         }
 
         // Default: General improvement suggestions
