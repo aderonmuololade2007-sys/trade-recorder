@@ -219,11 +219,15 @@ class TradingJournal {
         const filterPair = document.getElementById('filterPair').value;
         const filterResult = document.getElementById('filterResult').value;
 
+        // debug logging
+        console.log('renderTrades called', { all: this.trades.length, filterPair, filterResult });
+
         let filteredTrades = this.trades.filter(trade => {
             const pairMatch = !filterPair || trade.pair === filterPair;
             const resultMatch = !filterResult || trade.result === filterResult;
             return pairMatch && resultMatch;
         });
+        console.log('filteredTrades count', filteredTrades.length);
 
         // Update pair filter options
         this.updateFilterOptions();
