@@ -99,6 +99,8 @@ class TradingJournal {
         this.setTodayDate();
         this.renderTrades();
         this.updateStatistics();
+        // after statistics are ready initialize the chart display
+        this.initChart();
     }
 
     // Load trades from localStorage
@@ -398,6 +400,44 @@ class TradingJournal {
         document.getElementById('winRate').textContent = winRate + '%';
         document.getElementById('totalPL').textContent = totalPL;
         document.getElementById('avgRR').textContent = avgRR;
+        // refresh chart after updating stats
+        this.updateChart();
+    }
+
+    // initialize and update chart elements
+    initChart() {
+        const ctx = document.getElementById('tradeChart')?.getContext('2d');
+        if (!ctx) return;
+        this.chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Profit/Loss per Trade (pips)',
+                    backgroundColor: 'rgba(45,106,79,0.2)',
+                    borderColor: '#2d6a4f',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.2
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+        this.updateChart();
+    }
+
+    updateChart() {
+        if (!this.chart) return;
+        const labels = this.trades.map(t => this.formatDate(t.date));
+        const data = this.trades.map(t => t.profitLoss || 0);
+        this.chart.data.labels = labels;
+        this.chart.data.datasets[0].data = data;
+        this.chart.update();
     }
 
     // Get AI insights based on SMC concepts
@@ -423,21 +463,24 @@ class TradingJournal {
         const questionLower = question.toLowerCase();
         const trades = this.trades;
 
-        // Direct SMC concept explanations
-        if (questionLower.includes('order block')) {
-            return this.explainOrderBlock();
-        }
-        if (questionLower.includes('mitigation') || questionLower.includes('mitigation block')) {
-            return this.explainMitigationBlock();
-        }
-        if (questionLower.includes('liquidity')) {
-            return this.explainLiquidityZones();
-        }
-        if (questionLower.includes('market structure')) {
-            return this.explainMarketStructure();
-        }
-        if (questionLower.includes('entry') && questionLower.includes('smc')) {
-            return this.explainEntryChecklist();
+        // map of SMC keywords to explanation callbacks
+        const conceptMap = {
+            'order block': this.explainOrderBlock,
+            'mitigation block': this.explainMitigationBlock,
+            'liquidity': this.explainLiquidityZones,
+            'market structure': this.explainMarketStructure,
+            'fvg': this.explainFVG,
+            'fair value gap': this.explainFVG,
+            'break and retest': this.explainBreakRetest,
+            'order flow': this.explainOrderFlow,
+            'entry checklist': this.explainEntryChecklist,
+            'smc': this.analyzeSMCConcepts
+        };
+
+        for (const key in conceptMap) {
+            if (questionLower.includes(key)) {
+                return conceptMap[key].call(this);
+            }
         }
 
         // Existing analytics
@@ -665,6 +708,7 @@ class TradingJournal {
                 <li><strong>Break & Retest:</strong> Price breaks structure and retests it. Smart entry confirmation.</li>
                 <li><strong>Mitigation Blocks:</strong> Blocks that haven't been fully tested yet. Premium/Discount zones.</li>
                 <li><strong>Premium/Discount Zones:</strong> Resistance/Support where smart money accumulates.</li>
+                <li><strong>Fair Value Gap (FVG):</strong> Imbalanced area where price often returns to fill.</li>
                 <li><strong>Liquidity:</strong> Areas where institutions place stops to trigger retail traders.</li>
                 <li><strong>Market Structure:</strong> Higher Highs/Lows (uptrend), Lower Highs/Lows (downtrend).</li>
                 <li><strong>Order Flow:</strong> Direction of large institutional trades - follow the money.</li>
@@ -728,6 +772,40 @@ class TradingJournal {
 
     explainEntryChecklist() {
         return this.analyzeSMCConcepts(this.trades);
+    }
+
+    explainFVG() {
+        return `
+            <h3 style="color: #2d6a4f; margin-bottom: 1rem;">🌀 Fair Value Gap (FVG)</h3>
+            <p>A Fair Value Gap (FVG) is an imbalance created when price moves rapidly
+            and leaves a gap between two candles where no trading occurred. These gaps
+            tend to attract price back to "fill" the imbalance, offering potential
+            entry or exit zones for smart money traders.</p>
+            <p><strong>Tip:</strong> Spot FVGs near order blocks or structure breaks for
+            higher probability setups.</p>
+        `;
+    }
+
+    explainBreakRetest() {
+        return `
+            <h3 style="color: #2d6a4f; margin-bottom: 1rem;">🔁 Break & Retest</h3>
+            <p>Break & Retest is when price breaks a significant level (structure,
+            support/resistance, order block, etc.) and then returns to retest that
+            level before moving on. Traders use the retest as confirmation of the
+            breakout.</p>
+            <p><strong>Strategy:</strong> After a breakout, wait for a clear rejection
+            candle on the retest before entering in the breakout direction.</p>
+        `;
+    }
+
+    explainOrderFlow() {
+        return `
+            <h3 style="color: #2d6a4f; margin-bottom: 1rem;">📦 Order Flow</h3>
+            <p>Order flow refers to the stream of buy and sell orders that push price.
+            In SMC trading, following order flow means aligning with the direction where
+            large institutional orders are dominating. Strong candles with little
+            pullback often indicate powerful order flow.</p>
+        `;
     }
 
     // Provide psychological trading tips
