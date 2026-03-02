@@ -173,6 +173,9 @@ class TradingJournal {
 
         this.trades.unshift(trade);
         this.saveTrades();
+        // clear any active filters so the new trade is visible
+        document.getElementById('filterPair').value = '';
+        document.getElementById('filterResult').value = '';
         this.renderTrades();
         this.updateStatistics();
         this.resetForm();
