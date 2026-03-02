@@ -18,6 +18,33 @@
     --shadow: 0 4px 6px rgba(27, 67, 50, 0.1);
 }
 
+/* Dark mode overrides */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --forest-bg: #1b1b1b;
+        --forest-dark: #152a1a;
+        --forest-main: #1e3d2b;
+        --forest-light: #276a4f;
+        --forest-lighter: #378969;
+        --forest-accent: #4a9e7f;
+        --text-dark: #e8e8e8;
+        --text-light: #b0b0b0;
+        --border-color: #333;
+        --shadow: 0 4px 6px rgba(0,0,0,0.6);
+    }
+    body {
+        background: #111;
+        color: var(--text-dark);
+    }
+    .form-section, .history-section, .ai-section, .stats-section, .modal-content {
+        background: #222;
+        color: var(--text-dark);
+    }
+    .stat-card, .trade-card {
+        background: #2a2a2a;
+    }
+}
+
 * {
     margin: 0;
     padding: 0;
