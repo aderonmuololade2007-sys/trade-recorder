@@ -106,7 +106,15 @@ class TradingJournal {
     // Load trades from localStorage
     loadTrades() {
         const stored = localStorage.getItem('finspotTrades');
-        this.trades = stored ? JSON.parse(stored) : [];
+        console.log('loadTrades raw', stored);
+        try {
+            this.trades = stored ? JSON.parse(stored) : [];
+        } catch (e) {
+            console.error('Failed to parse stored trades', e);
+            // clear corrupted data
+            this.trades = [];
+            localStorage.removeItem('finspotTrades');
+        }
     }
 
     // Save trades to localStorage
