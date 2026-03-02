@@ -1,0 +1,647 @@
+/* ============================================
+   FINSPOT TRADING JOURNAL - FOREST GREEN THEME
+   ============================================ */
+
+:root {
+    --forest-dark: #1b4332;
+    --forest-main: #2d6a4f;
+    --forest-light: #40916c;
+    --forest-lighter: #52b788;
+    --forest-accent: #74c69d;
+    --forest-bg: #f1faee;
+    --success: #06d6a0;
+    --danger: #e63946;
+    --warning: #f77f00;
+    --text-dark: #1b263b;
+    --text-light: #818181;
+    --border-color: #e0e0e0;
+    --shadow: 0 4px 6px rgba(27, 67, 50, 0.1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--forest-bg);
+    color: var(--text-dark);
+    scroll-behavior: smooth;
+}
+
+.container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--forest-bg);
+}
+
+/* ============= HEADER ============= */
+.header {
+    background: linear-gradient(135deg, var(--forest-dark) 0%, var(--forest-main) 100%);
+    color: white;
+    padding: 3rem 2rem;
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-content {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.header-with-logo {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.logo-container {
+    flex-shrink: 0;
+}
+
+.logo {
+    height: 50px;
+    width: 50px;
+}
+
+.header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+}
+
+.header p {
+    font-size: 1rem;
+    opacity: 0.95;
+    font-weight: 300;
+}
+
+/* ============= MAIN CONTENT ============= */
+.main-content {
+    flex: 1;
+    max-width: 1400px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.form-section, .history-section, .ai-section, .stats-section {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow);
+    border-left: 5px solid var(--forest-main);
+}
+
+.form-section h2, .history-section h2, .ai-section h2, .stats-section h2 {
+    color: var(--forest-dark);
+    margin-bottom: 1.5rem;
+    font-size: 1.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* ============= FORM STYLES ============= */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.form-group label {
+    margin-bottom: 0.5rem;
+    color: var(--text-dark);
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    padding: 0.75rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    transition: all 0.3s ease;
+    background-color: #fafafa;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--forest-light);
+    background-color: white;
+    box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.1);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* ============= BUTTONS ============= */
+.btn-submit, .btn-ai, .btn-danger {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-submit {
+    background: linear-gradient(135deg, var(--forest-light) 0%, var(--forest-main) 100%);
+    color: white;
+    width: 100%;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(45, 106, 79, 0.3);
+}
+
+.btn-submit:active {
+    transform: translateY(0);
+}
+
+.btn-ai {
+    background: var(--forest-light);
+    color: white;
+    margin-top: 0.5rem;
+}
+
+.btn-ai:hover {
+    background: var(--forest-main);
+    transform: translateY(-2px);
+}
+
+.btn-danger {
+    background: var(--danger);
+    color: white;
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
+}
+
+.btn-danger:hover {
+    background: #d62828;
+}
+
+/* ============= CONTENT GRID ============= */
+.content-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+/* ============= AI ASSISTANT ============= */
+.ai-container {
+    background: linear-gradient(135deg, rgba(64, 145, 108, 0.05) 0%, rgba(116, 198, 157, 0.05) 100%);
+    padding: 1.5rem;
+    border-radius: 10px;
+    border: 1px solid var(--forest-lighter);
+}
+
+.ai-input-group {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.ai-input-group input {
+    flex: 1;
+    padding: 0.75rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 0.95rem;
+}
+
+.ai-input-group input:focus {
+    outline: none;
+    border-color: var(--forest-light);
+}
+
+.ai-response {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border-left: 4px solid var(--forest-light);
+    min-height: 150px;
+    max-height: 400px;
+    overflow-y: auto;
+    color: var(--text-dark);
+    line-height: 1.6;
+    font-size: 0.95rem;
+}
+
+.ai-response:empty::before {
+    content: "💡 Ask me about your trades and I'll provide SMC-based insights!";
+    color: var(--text-light);
+}
+
+/* ============= STATISTICS ============= */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, var(--forest-light) 0%, var(--forest-lighter) 100%);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(45, 106, 79, 0.2);
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.85rem;
+    opacity: 0.9;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.stat-value {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+/* ============= TRADE HISTORY ============= */
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.filter-controls {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.filter-select {
+    padding: 0.6rem;
+    border: 2px solid var(--border-color);
+    border-radius: 6px;
+    background-color: white;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+}
+
+.filter-select:hover {
+    border-color: var(--forest-light);
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: var(--forest-light);
+}
+
+.trades-list {
+    display: grid;
+    gap: 1rem;
+}
+
+.no-trades {
+    grid-column: 1 / -1;
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-light);
+    font-style: italic;
+}
+
+.trade-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fffe 100%);
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.trade-card:hover {
+    border-color: var(--forest-light);
+    box-shadow: 0 8px 16px rgba(45, 106, 79, 0.15);
+    transform: translateY(-2px);
+}
+
+.trade-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.trade-pair {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--forest-dark);
+}
+
+.trade-date {
+    color: var(--text-light);
+    font-size: 0.85rem;
+}
+
+.trade-badge {
+    display: inline-block;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.badge-win {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.badge-loss {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.badge-break-even {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+.badge-pending {
+    background: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+.badge-long {
+    background: rgba(82, 183, 136, 0.2);
+    color: var(--forest-dark);
+    border: 1px solid var(--forest-lighter);
+}
+
+.badge-short {
+    background: rgba(230, 57, 70, 0.2);
+    color: var(--danger);
+    border: 1px solid var(--danger);
+}
+
+.trade-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.trade-detail {
+    background: var(--forest-bg);
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 3px solid var(--forest-light);
+}
+
+.trade-detail-label {
+    color: var(--text-light);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.35rem;
+    font-weight: 600;
+}
+
+.trade-detail-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.pl-positive {
+    color: var(--success);
+}
+
+.pl-negative {
+    color: var(--danger);
+}
+
+.trade-notes-section {
+    background: var(--forest-bg);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+    border-left: 3px solid var(--forest-accent);
+}
+
+.trade-notes-label {
+    color: var(--text-light);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.trade-notes-text {
+    color: var(--text-dark);
+    line-height: 1.5;
+    font-size: 0.9rem;
+}
+
+.trade-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.btn-delete, .btn-edit {
+    flex: 1;
+    padding: 0.5rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-delete {
+    background: #ffe0e0;
+    color: var(--danger);
+    border: 1px solid var(--danger);
+}
+
+.btn-delete:hover {
+    background: var(--danger);
+    color: white;
+}
+
+.btn-edit {
+    background: var(--forest-accent);
+    color: white;
+    border: 1px solid var(--forest-light);
+}
+
+.btn-edit:hover {
+    background: var(--forest-light);
+}
+
+/* ============= FOOTER ============= */
+.footer {
+    background: var(--forest-dark);
+    color: white;
+    text-align: center;
+    padding: 1.5rem;
+    margin-top: auto;
+    font-size: 0.9rem;
+}
+
+/* ============= RESPONSIVE DESIGN ============= */
+@media (max-width: 768px) {
+    .header h1 {
+        font-size: 1.75rem;
+    }
+
+    .header p {
+        font-size: 0.9rem;
+    }
+
+    .main-content {
+        padding: 1rem;
+    }
+
+    .form-section, .history-section, .ai-section, .stats-section {
+        padding: 1.5rem;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .content-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .history-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .trade-details {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+    }
+
+    .ai-input-group {
+        flex-direction: column;
+    }
+
+    .ai-input-group input,
+    .ai-input-group button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .header {
+        padding: 1.5rem 1rem;
+    }
+
+    .header h1 {
+        font-size: 1.5rem;
+    }
+
+    .form-section h2, .history-section h2, .ai-section h2, .stats-section h2 {
+        font-size: 1.3rem;
+    }
+
+    .trade-details {
+        grid-template-columns: 1fr;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .filter-controls {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .filter-select, .btn-danger {
+        width: 100%;
+    }
+}
+
+/* ============= SCROLLBAR STYLING ============= */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--forest-bg);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--forest-lighter);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--forest-light);
+}
+
+/* ============= ANIMATIONS ============= */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.trade-card {
+    animation: fadeIn 0.3s ease;
+}

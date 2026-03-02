@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finspot Trading Journal - Forex Trading with AI</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content header-with-logo">
+                <!-- simple SVG logo; replace with your own image as needed -->
+                <div class="logo-container">
+                    <svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+                        <!-- white circle for contrast -->
+                        <circle cx="32" cy="32" r="32" fill="#ffffff"/>
+                        <text x="32" y="37" text-anchor="middle" font-family="Segoe UI" font-size="24" fill="#2d6a4f" font-weight="bold">F</text>
+                    </svg>
+                </div>
+                <div>
+                    <h1>📊 Finspot Trading Journal</h1>
+                    <p>AI-Powered Forex Trading Journal with Smart Money Concept Analysis</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Trade Entry Form -->
+            <section class="form-section">
+                <h2>Record New Trade</h2>
+                <form id="tradeForm" class="trade-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="tradeDate">Date</label>
+                            <input type="date" id="tradeDate" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="tradePair">Currency Pair</label>
+                            <select id="tradePair" required>
+                                <option value="">Select Pair</option>
+                                <option value="EUR/USD">EUR/USD</option>
+                                <option value="GBP/USD">GBP/USD</option>
+                                <option value="USD/JPY">USD/JPY</option>
+                                <option value="USD/CHF">USD/CHF</option>
+                                <option value="AUD/USD">AUD/USD</option>
+                                <option value="USD/CAD">USD/CAD</option>
+                                <option value="NZD/USD">NZD/USD</option>
+                                <option value="BTC/USD">BTC/USD</option>
+                                <option value="XAU/USD">XAU/USD</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="tradeType">Trade Type</label>
+                            <select id="tradeType" required>
+                                <option value="">Select Type</option>
+                                <option value="Long">Long</option>
+                                <option value="Short">Short</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="entryPoint">Entry Point (Price)</label>
+                            <input type="number" id="entryPoint" step="0.0001" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="stopLoss">Stop Loss (Price)</label>
+                            <input type="number" id="stopLoss" step="0.0001" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="takeProfit">Take Profit (Price)</label>
+                            <input type="number" id="takeProfit" step="0.0001" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="exitPoint">Exit Point (Price)</label>
+                            <input type="number" id="exitPoint" step="0.0001">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="riskReward">Risk/Reward Ratio</label>
+                            <input type="number" id="riskReward" step="0.1" placeholder="e.g., 1:2" readonly>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="tradeResult">Trade Result</label>
+                            <select id="tradeResult">
+                                <option value="">Pending</option>
+                                <option value="Win">Win</option>
+                                <option value="Loss">Loss</option>
+                                <option value="Break Even">Break Even</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="profitLoss">Profit/Loss (Pips)</label>
+                            <input type="number" id="profitLoss" step="0.1">
+                        </div>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="smcStrategy">SMC Strategy Used</label>
+                        <textarea id="smcStrategy" placeholder="Describe the Smart Money Concept strategy used (e.g., Break and Retest, Order Flow, Mitigation Block, etc.)" rows="3"></textarea>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="tradeNotes">Trade Notes & Analysis</label>
+                        <textarea id="tradeNotes" placeholder="Additional notes, market conditions, economic events, etc." rows="4"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-submit">Record Trade</button>
+                </form>
+            </section>
+
+            <div class="content-grid">
+                <!-- AI Assistant Panel -->
+                <section class="ai-section">
+                    <h2>🤖 AI Trading Assistant</h2>
+                    <div class="ai-container">
+                        <div class="ai-input-group">
+                            <input type="text" id="aiQuestion" placeholder="Ask AI for trade improvement suggestions...">
+                            <button id="askAiBtn" class="btn-ai">Get Insights</button>
+                        </div>
+                        <div id="aiResponse" class="ai-response"></div>
+                    </div>
+                </section>
+
+                <!-- Statistics Panel -->
+                <section class="stats-section">
+                    <h2>📈 Trading Statistics</h2>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <span class="stat-label">Total Trades</span>
+                            <span class="stat-value" id="totalTrades">0</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-label">Win Rate</span>
+                            <span class="stat-value" id="winRate">0%</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-label">Total P/L (Pips)</span>
+                            <span class="stat-value" id="totalPL">0</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-label">Avg R:R Ratio</span>
+                            <span class="stat-value" id="avgRR">0</span>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Trade History -->
+            <section class="history-section">
+                <div class="history-header">
+                    <h2>📋 Trade History</h2>
+                    <div class="filter-controls">
+                        <select id="filterPair" class="filter-select">
+                            <option value="">All Pairs</option>
+                        </select>
+                        <select id="filterResult" class="filter-select">
+                            <option value="">All Results</option>
+                            <option value="Win">Wins</option>
+                            <option value="Loss">Losses</option>
+                            <option value="Break Even">Break Even</option>
+                        </select>
+                        <button id="clearHistoryBtn" class="btn-danger">Clear History</button>
+                    </div>
+                </div>
+                <div id="tradesList" class="trades-list">
+                    <p class="no-trades">No trades recorded yet. Start recording your trades!</p>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2026 Finspot Trading Journal | AI-Powered Forex Trading Analysis</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

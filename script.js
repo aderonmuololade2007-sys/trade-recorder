@@ -1,0 +1,611 @@
+// ============================================
+// FINSPOT TRADING JOURNAL - JAVASCRIPT
+// AI-Powered Forex Trading Journal
+// ============================================
+
+class TradingJournal {
+    constructor() {
+        this.trades = [];
+        this.loadTrades();
+        this.initializeEventListeners();
+        this.setTodayDate();
+        this.renderTrades();
+        this.updateStatistics();
+    }
+
+    // Load trades from localStorage
+    loadTrades() {
+        const stored = localStorage.getItem('finspotTrades');
+        this.trades = stored ? JSON.parse(stored) : [];
+    }
+
+    // Save trades to localStorage
+    saveTrades() {
+        localStorage.setItem('finspotTrades', JSON.stringify(this.trades));
+    }
+
+    // Initialize all event listeners
+    initializeEventListeners() {
+        document.getElementById('tradeForm').addEventListener('submit', (e) => this.handleFormSubmit(e));
+        document.getElementById('entryPoint').addEventListener('change', () => this.calculateRiskReward());
+        document.getElementById('stopLoss').addEventListener('change', () => this.calculateRiskReward());
+        document.getElementById('takeProfit').addEventListener('change', () => this.calculateRiskReward());
+        document.getElementById('askAiBtn').addEventListener('click', () => this.getAIInsights());
+        document.getElementById('aiQuestion').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.getAIInsights();
+        });
+        document.getElementById('filterPair').addEventListener('change', () => this.renderTrades());
+        document.getElementById('filterResult').addEventListener('change', () => this.renderTrades());
+        document.getElementById('clearHistoryBtn').addEventListener('click', () => this.clearHistory());
+    }
+
+    // Set today's date as default
+    setTodayDate() {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('tradeDate').value = today;
+    }
+
+    // Calculate Risk/Reward Ratio
+    calculateRiskReward() {
+        const entry = parseFloat(document.getElementById('entryPoint').value);
+        const sl = parseFloat(document.getElementById('stopLoss').value);
+        const tp = parseFloat(document.getElementById('takeProfit').value);
+
+        if (entry && sl && tp) {
+            const risk = Math.abs(entry - sl);
+            const reward = Math.abs(tp - entry);
+            const ratio = risk > 0 ? (reward / risk).toFixed(2) : 0;
+            document.getElementById('riskReward').value = `1:${ratio}`;
+        }
+    }
+
+    // Handle form submission
+    handleFormSubmit(e) {
+        e.preventDefault();
+
+        const trade = {
+            id: Date.now(),
+            date: document.getElementById('tradeDate').value,
+            pair: document.getElementById('tradePair').value,
+            type: document.getElementById('tradeType').value,
+            entryPoint: parseFloat(document.getElementById('entryPoint').value),
+            stopLoss: parseFloat(document.getElementById('stopLoss').value),
+            takeProfit: parseFloat(document.getElementById('takeProfit').value),
+            exitPoint: parseFloat(document.getElementById('exitPoint').value) || null,
+            riskReward: document.getElementById('riskReward').value,
+            result: document.getElementById('tradeResult').value || 'Pending',
+            profitLoss: parseFloat(document.getElementById('profitLoss').value) || 0,
+            smcStrategy: document.getElementById('smcStrategy').value,
+            notes: document.getElementById('tradeNotes').value,
+            timestamp: new Date().toISOString()
+        };
+
+        this.trades.unshift(trade);
+        this.saveTrades();
+        this.renderTrades();
+        this.updateStatistics();
+        this.resetForm();
+        this.showNotification('Trade recorded successfully!');
+    }
+
+    // Reset form
+    resetForm() {
+        document.getElementById('tradeForm').reset();
+        this.setTodayDate();
+        document.getElementById('riskReward').value = '';
+    }
+
+    // Show notification
+    showNotification(message) {
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #40916c;
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        `;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    }
+
+    // Render trades to UI
+    renderTrades() {
+        const container = document.getElementById('tradesList');
+        const filterPair = document.getElementById('filterPair').value;
+        const filterResult = document.getElementById('filterResult').value;
+
+        let filteredTrades = this.trades.filter(trade => {
+            const pairMatch = !filterPair || trade.pair === filterPair;
+            const resultMatch = !filterResult || trade.result === filterResult;
+            return pairMatch && resultMatch;
+        });
+
+        // Update pair filter options
+        this.updateFilterOptions();
+
+        if (filteredTrades.length === 0) {
+            container.innerHTML = '<p class="no-trades">No trades recorded yet. Start recording your trades!</p>';
+            return;
+        }
+
+        container.innerHTML = filteredTrades.map(trade => this.createTradeCard(trade)).join('');
+
+        // Add event listeners to delete buttons
+        document.querySelectorAll('.btn-delete').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const tradeId = parseInt(e.target.dataset.tradeId);
+                this.deleteTrade(tradeId);
+            });
+        });
+    }
+
+    // Update filter pair options
+    updateFilterOptions() {
+        const filterPair = document.getElementById('filterPair');
+        const pairs = [...new Set(this.trades.map(t => t.pair))];
+
+        const currentValue = filterPair.value;
+        const currentOptions = Array.from(filterPair.options).map(o => o.value);
+
+        pairs.forEach(pair => {
+            if (!currentOptions.includes(pair)) {
+                const option = document.createElement('option');
+                option.value = pair;
+                option.textContent = pair;
+                filterPair.appendChild(option);
+            }
+        });
+
+        filterPair.value = currentValue;
+    }
+
+    // Create trade card HTML
+    createTradeCard(trade) {
+        const resultBadge = this.getResultBadge(trade.result);
+        const typeBadge = this.getTypeBadge(trade.type);
+        const profitLossClass = trade.profitLoss >= 0 ? 'pl-positive' : 'pl-negative';
+        const profitLossSymbol = trade.profitLoss >= 0 ? '+' : '';
+
+        return `
+            <div class="trade-card">
+                <div class="trade-card-header">
+                    <div>
+                        <div class="trade-pair">${trade.pair}</div>
+                        <div class="trade-date">${this.formatDate(trade.date)}</div>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        ${resultBadge}
+                        ${typeBadge}
+                    </div>
+                </div>
+
+                <div class="trade-details">
+                    <div class="trade-detail">
+                        <div class="trade-detail-label">Entry</div>
+                        <div class="trade-detail-value">${trade.entryPoint.toFixed(4)}</div>
+                    </div>
+                    <div class="trade-detail">
+                        <div class="trade-detail-label">Stop Loss</div>
+                        <div class="trade-detail-value">${trade.stopLoss.toFixed(4)}</div>
+                    </div>
+                    <div class="trade-detail">
+                        <div class="trade-detail-label">Take Profit</div>
+                        <div class="trade-detail-value">${trade.takeProfit.toFixed(4)}</div>
+                    </div>
+                    <div class="trade-detail">
+                        <div class="trade-detail-label">R:R Ratio</div>
+                        <div class="trade-detail-value">${trade.riskReward}</div>
+                    </div>
+                    ${trade.exitPoint ? `
+                    <div class="trade-detail">
+                        <div class="trade-detail-label">Exit</div>
+                        <div class="trade-detail-value">${trade.exitPoint.toFixed(4)}</div>
+                    </div>
+                    ` : ''}
+                    <div class="trade-detail">
+                        <div class="trade-detail-label">P/L (Pips)</div>
+                        <div class="trade-detail-value ${profitLossClass}">${profitLossSymbol}${trade.profitLoss.toFixed(1)}</div>
+                    </div>
+                </div>
+
+                ${trade.smcStrategy ? `
+                <div class="trade-notes-section">
+                    <div class="trade-notes-label">📍 SMC Strategy</div>
+                    <div class="trade-notes-text">${this.escapeHtml(trade.smcStrategy)}</div>
+                </div>
+                ` : ''}
+
+                ${trade.notes ? `
+                <div class="trade-notes-section">
+                    <div class="trade-notes-label">📝 Notes</div>
+                    <div class="trade-notes-text">${this.escapeHtml(trade.notes)}</div>
+                </div>
+                ` : ''}
+
+                <div class="trade-actions">
+                    <button class="btn-delete" data-trade-id="${trade.id}">Delete Trade</button>
+                </div>
+            </div>
+        `;
+    }
+
+    // Get result badge HTML
+    getResultBadge(result) {
+        const badges = {
+            'Win': '<span class="trade-badge badge-win">✓ Win</span>',
+            'Loss': '<span class="trade-badge badge-loss">✗ Loss</span>',
+            'Break Even': '<span class="trade-badge badge-break-even">= Break Even</span>',
+            'Pending': '<span class="trade-badge badge-pending">⏳ Pending</span>',
+            '': '<span class="trade-badge badge-pending">⏳ Pending</span>'
+        };
+        return badges[result] || badges['Pending'];
+    }
+
+    // Get type badge HTML
+    getTypeBadge(type) {
+        return type === 'Long' 
+            ? '<span class="trade-badge badge-long">📈 Long</span>'
+            : '<span class="trade-badge badge-short">📉 Short</span>';
+    }
+
+    // Format date
+    formatDate(dateStr) {
+        return new Date(dateStr).toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric' 
+        });
+    }
+
+    // Escape HTML
+    escapeHtml(text) {
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return text.replace(/[&<>"']/g, m => map[m]);
+    }
+
+    // Delete trade
+    deleteTrade(tradeId) {
+        if (confirm('Are you sure you want to delete this trade?')) {
+            this.trades = this.trades.filter(t => t.id !== tradeId);
+            this.saveTrades();
+            this.renderTrades();
+            this.updateStatistics();
+            this.showNotification('Trade deleted successfully!');
+        }
+    }
+
+    // Update statistics
+    updateStatistics() {
+        const total = this.trades.length;
+        const wins = this.trades.filter(t => t.result === 'Win').length;
+        const winRate = total > 0 ? ((wins / total) * 100).toFixed(1) : 0;
+        const totalPL = this.trades.reduce((sum, t) => sum + (t.profitLoss || 0), 0).toFixed(1);
+        
+        const ratios = this.trades
+            .map(t => {
+                const ratioStr = t.riskReward.split(':')[1];
+                return parseFloat(ratioStr) || 0;
+            })
+            .filter(r => r > 0);
+        const avgRR = ratios.length > 0 ? (ratios.reduce((a, b) => a + b) / ratios.length).toFixed(2) : 0;
+
+        document.getElementById('totalTrades').textContent = total;
+        document.getElementById('winRate').textContent = winRate + '%';
+        document.getElementById('totalPL').textContent = totalPL;
+        document.getElementById('avgRR').textContent = avgRR;
+    }
+
+    // Get AI insights based on SMC concepts
+    getAIInsights() {
+        const question = document.getElementById('aiQuestion').value.trim();
+        const responseDiv = document.getElementById('aiResponse');
+
+        if (!question) {
+            responseDiv.innerHTML = '<p style="color: #999;">Please ask a question about your trading.</p>';
+            return;
+        }
+
+        responseDiv.innerHTML = '<p style="color: #999; font-style: italic;">🤖 Analyzing your trades...</p>';
+
+        setTimeout(() => {
+            const insight = this.generateAIInsight(question);
+            responseDiv.innerHTML = insight;
+        }, 500);
+    }
+
+    // Generate AI insight based on trades and SMC concepts
+    generateAIInsight(question) {
+        const questionLower = question.toLowerCase();
+        const trades = this.trades;
+
+        // SMC Strategy Analysis
+        if (questionLower.includes('strategy') || questionLower.includes('improve') || questionLower.includes('better')) {
+            return this.analyzeStrategy(trades);
+        }
+
+        // Risk/Reward Analysis
+        if (questionLower.includes('risk') || questionLower.includes('reward') || questionLower.includes('r:r')) {
+            return this.analyzeRiskReward(trades);
+        }
+
+        // Win Rate Analysis
+        if (questionLower.includes('win') || questionLower.includes('loss') || questionLower.includes('success')) {
+            return this.analyzeWinRate(trades);
+        }
+
+        // Pair Performance
+        if (questionLower.includes('pair') || questionLower.includes('performance')) {
+            return this.analyzePairPerformance(trades);
+        }
+
+        // Entry/Exit Analysis
+        if (questionLower.includes('entry') || questionLower.includes('exit') || questionLower.includes('smc')) {
+            return this.analyzeSMCConcepts(trades);
+        }
+
+        // Default: General improvement suggestions
+        return this.generateGeneralInsights(trades);
+    }
+
+    // Analyze trading strategy
+    analyzeStrategy(trades) {
+        if (trades.length === 0) {
+            return `
+                <h3 style="color: #2d6a4f; margin-bottom: 1rem;">📊 Trading Strategy Analysis</h3>
+                <p>You haven't recorded any trades yet. Start recording your trades to get SMC-based strategy insights!</p>
+            `;
+        }
+
+        const smcStrategies = trades
+            .map(t => t.smcStrategy)
+            .filter(s => s && s.trim().length > 0);
+
+        const strategyCount = {};
+        smcStrategies.forEach(s => {
+            strategyCount[s] = (strategyCount[s] || 0) + 1;
+        });
+
+        let analysis = `
+            <h3 style="color: #2d6a4f; margin-bottom: 1rem;">📊 Trading Strategy Analysis</h3>
+            <p><strong>Most Used Strategies:</strong></p>
+            <ul style="margin-left: 1.5rem; color: #1b263b;">
+        `;
+
+        Object.entries(strategyCount)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 3)
+            .forEach(([strategy, count]) => {
+                analysis += `<li>${strategy} <span style="color: #40916c;">(${count}x)</span></li>`;
+            });
+
+        analysis += `</ul>
+            <p style="margin-top: 1rem;"><strong>💡 SMC Recommendations:</strong></p>
+            <ul style="margin-left: 1.5rem; color: #1b263b;">
+                <li>Combine Break and Retest with Order Flow for stronger confirmation</li>
+                <li>Use Mitigation Blocks to identify safe entry zones</li>
+                <li>Mark Support/Resistance zones where Smart Money institutions operate</li>
+                <li>Focus on Premium/Discount zones for better R:R ratios</li>
+                <li>Validate entries using Market Structure Breaks</li>
+            </ul>
+        `;
+
+        return analysis;
+    }
+
+    // Analyze risk/reward
+    analyzeRiskReward(trades) {
+        if (trades.length === 0) {
+            return `
+                <h3 style="color: #2d6a4f; margin-bottom: 1rem;">💰 Risk/Reward Analysis</h3>
+                <p>No trades recorded yet. Maintain a minimum R:R ratio of 1:2 for profitable trading.</p>
+            `;
+        }
+
+        const ratios = trades.map(t => {
+            const parts = t.riskReward.split(':');
+            return parseFloat(parts[1]) || 0;
+        }).filter(r => r > 0);
+
+        const avgRR = ratios.length > 0 ? (ratios.reduce((a, b) => a + b) / ratios.length).toFixed(2) : 0;
+        const goodRRTrades = ratios.filter(r => r >= 2).length;
+        const goodRRPercent = ratios.length > 0 ? ((goodRRTrades / ratios.length) * 100).toFixed(1) : 0;
+
+        return `
+            <h3 style="color: #2d6a4f; margin-bottom: 1rem;">💰 Risk/Reward Analysis</h3>
+            <p><strong>Your Average R:R Ratio:</strong> <span style="color: #40916c; font-size: 1.2rem; font-weight: bold;">1:${avgRR}</span></p>
+            <p><strong>Trades with R:R ≥ 1:2:</strong> <span style="color: #40916c;">${goodRRPercent}%</span></p>
+            <p style="margin-top: 1rem;"><strong>💡 Insights & Improvements:</strong></p>
+            <ul style="margin-left: 1.5rem; color: #1b263b;">
+                <li>${avgRR >= 2 ? '✓ Excellent risk management! Maintain these ratios.' : '⚠ Try to maintain minimum 1:2 R:R ratios for long-term profitability.'}</li>
+                <li>Use Mitigation Blocks and Order Blocks to tighten stops (reduce risk)</li>
+                <li>Place profits in line with Daily/Weekly resistance/support for better rewards</li>
+                <li>Avoid trades with R:R below 1:1.5 unless high probability setup</li>
+            </ul>
+        `;
+    }
+
+    // Analyze win rate
+    analyzeWinRate(trades) {
+        if (trades.length === 0) {
+            return `
+                <h3 style="color: #2d6a4f; margin-bottom: 1rem;">📈 Win Rate Analysis</h3>
+                <p>Start recording trades to track your win rate and consistency.</p>
+            `;
+        }
+
+        const closed = trades.filter(t => t.result && t.result !== 'Pending');
+        if (closed.length === 0) {
+            return `
+                <h3 style="color: #2d6a4f; margin-bottom: 1rem;">📈 Win Rate Analysis</h3>
+                <p>Complete some trades to analyze your win rate. Keep trading journal entries for at least 50 trades.</p>
+            `;
+        }
+
+        const wins = closed.filter(t => t.result === 'Win').length;
+        const losses = closed.filter(t => t.result === 'Loss').length;
+        const breakEven = closed.filter(t => t.result === 'Break Even').length;
+        const winRate = ((wins / closed.length) * 100).toFixed(1);
+
+        return `
+            <h3 style="color: #2d6a4f; margin-bottom: 1rem;">📈 Win Rate Analysis</h3>
+            <p><strong>Total Closed Trades:</strong> ${closed.length} | <strong>Wins:</strong> ${wins} | <strong>Losses:</strong> ${losses} | <strong>Break Even:</strong> ${breakEven}</p>
+            <p><strong>Win Rate:</strong> <span style="color: ${winRate >= 55 ? '#06d6a0' : winRate >= 50 ? '#f77f00' : '#e63946'}; font-size: 1.2rem; font-weight: bold;">${winRate}%</span></p>
+            <p style="margin-top: 1rem;"><strong>💡 Analysis:</strong></p>
+            <ul style="margin-left: 1.5rem; color: #1b263b;">
+                <li>${winRate >= 55 ? '✓ Strong win rate! Above 55% is excellent.' : winRate >= 50 ? '⚠ Break-even. Focus on improving entry accuracy.' : '⚠ Below 50%. Refocus on high-probability SMC setups.'}</li>
+                <li>Track entry patterns that lead to wins vs losses</li>
+                <li>Focus on Order Flow and Market Structure for entries</li>
+                <li>Sample size: Analyze after at least 50 closed trades</li>
+            </ul>
+        `;
+    }
+
+    // Analyze pair performance
+    analyzePairPerformance(trades) {
+        if (trades.length === 0) {
+            return `
+                <h3 style="color: #2d6a4f; margin-bottom: 1rem;">🌍 Pair Performance</h3>
+                <p>Start recording trades to analyze performance by currency pair.</p>
+            `;
+        }
+
+        const pairStats = {};
+        trades.forEach(trade => {
+            if (!pairStats[trade.pair]) {
+                pairStats[trade.pair] = { total: 0, wins: 0, pl: 0 };
+            }
+            pairStats[trade.pair].total++;
+            if (trade.result === 'Win') pairStats[trade.pair].wins++;
+            pairStats[trade.pair].pl += trade.profitLoss || 0;
+        });
+
+        let analysis = `
+            <h3 style="color: #2d6a4f; margin-bottom: 1rem;">🌍 Pair Performance Analysis</h3>
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 1rem; font-size: 0.9rem;">
+                <tr style="background: #f1faee; border: 1px solid #e0e0e0;">
+                    <th style="padding: 0.5rem; text-align: left;">Pair</th>
+                    <th style="padding: 0.5rem;">Trades</th>
+                    <th style="padding: 0.5rem;">Win%</th>
+                    <th style="padding: 0.5rem;">P/L</th>
+                </tr>
+        `;
+
+        Object.entries(pairStats)
+            .sort((a, b) => b[1].total - a[1].total)
+            .forEach(([pair, stats]) => {
+                const winRate = ((stats.wins / stats.total) * 100).toFixed(0);
+                const plColor = stats.pl >= 0 ? '#06d6a0' : '#e63946';
+                analysis += `
+                    <tr style="border: 1px solid #e0e0e0;">
+                        <td style="padding: 0.5rem; font-weight: bold;">${pair}</td>
+                        <td style="padding: 0.5rem; text-align: center;">${stats.total}</td>
+                        <td style="padding: 0.5rem; text-align: center;">${winRate}%</td>
+                        <td style="padding: 0.5rem; text-align: center; color: ${plColor}; font-weight: bold;">${stats.pl > 0 ? '+' : ''}${stats.pl.toFixed(1)}</td>
+                    </tr>
+                `;
+            });
+
+        analysis += `
+            </table>
+            <p><strong>💡 Recommendations:</strong></p>
+            <ul style="margin-left: 1.5rem; color: #1b263b; font-size: 0.9rem;">
+                <li>Focus on 2-3 pairs you're most profitable with</li>
+                <li>Different pairs have different volatility - adjust position sizing accordingly</li>
+                <li>Major pairs (EUR/USD, GBP/USD) typically have better liquidity for SMC setups</li>
+            </ul>
+        `;
+
+        return analysis;
+    }
+
+    // Analyze SMC concepts
+    analyzeSMCConcepts(trades) {
+        return `
+            <h3 style="color: #2d6a4f; margin-bottom: 1rem;">📍 SMC Concepts Guide</h3>
+            <p><strong>Key Smart Money Concepts:</strong></p>
+            <ul style="margin-left: 1.5rem; color: #1b263b; font-size: 0.9rem; line-height: 1.8;">
+                <li><strong>Order Blocks:</strong> An impulsive candle followed by pullback. Institutional buy/sell zones.</li>
+                <li><strong>Break & Retest:</strong> Price breaks structure and retests it. Smart entry confirmation.</li>
+                <li><strong>Mitigation Blocks:</strong> Blocks that haven't been fully tested yet. Premium/Discount zones.</li>
+                <li><strong>Premium/Discount Zones:</strong> Resistance/Support where smart money accumulates.</li>
+                <li><strong>Liquidity:</strong> Areas where institutions place stops to trigger retail traders.</li>
+                <li><strong>Market Structure:</strong> Higher Highs/Lows (uptrend), Lower Highs/Lows (downtrend).</li>
+                <li><strong>Order Flow:</strong> Direction of large institutional trades - follow the money.</li>
+            </ul>
+            <p style="margin-top: 1rem;"><strong>💡 Entry Checklist:</strong></p>
+            <ul style="margin-left: 1.5rem; color: #1b263b; font-size: 0.9rem;">
+                <li>✓ Market Structure Break confirmed</li>
+                <li>✓ Entry near Order Block or Mitigation Block</li>
+                <li>✓ Risk/Reward at least 1:2</li>
+                <li>✓ Multiple timeframe confirmation</li>
+                <li>✓ Liquidity zone proximity checked</li>
+            </ul>
+        `;
+    }
+
+    // Generate general insights
+    generateGeneralInsights(trades) {
+        if (trades.length === 0) {
+            return `
+                <h3 style="color: #2d6a4f; margin-bottom: 1rem;">💡 Get Started</h3>
+                <p><strong>Welcome to Finspot Trading Journal!</strong></p>
+                <p style="margin-top: 1rem;">Start recording your forex trades to unlock AI-powered insights based on Smart Money Concept principles. Once you have some trades, you can ask me about:</p>
+                <ul style="margin-left: 1.5rem; color: #1b263b;">
+                    <li>Your trading strategy improvements</li>
+                    <li>Risk/Reward ratio analysis</li>
+                    <li>Win rate and performance metrics</li>
+                    <li>Currency pair performance</li>
+                    <li>SMC concepts and entry validation</li>
+                </ul>
+            `;
+        }
+
+        return `
+            <h3 style="color: #2d6a4f; margin-bottom: 1rem;">💡 Smart Money Trading Suggestions</h3>
+            <p style="margin-bottom: 1rem;"><strong>Based on your ${trades.length} trade${trades.length > 1 ? 's' : ''}:</strong></p>
+            <ul style="margin-left: 1.5rem; color: #1b263b; line-height: 1.8;">
+                <li><strong>1. Focus on Order Blocks:</strong> Use previous impulsive moves to identify institutional entry zones. Enter on retests of these blocks.</li>
+                <li><strong>2. Validate with Market Structure:</strong> Trade with the trend - longs on Higher Highs/Lows, shorts on Lower Highs/Lows.</li>
+                <li><strong>3. Use Daily Timeframe:</strong> Identify SMC levels on Daily/4H, then execute on 1H/15M for precision entries.</li>
+                <li><strong>4. Risk Management First:</strong> Place stops below Order Blocks. Never risk more than 1-2% per trade.</li>
+                <li><strong>5. Break & Retest Strategy:</strong> Wait for price to break structure, then enter on the retest for confirmation.</li>
+                <li><strong>6. Track Liquidity:</strong> Institutions hunt stops at key levels. Stay aware and protect your trades.</li>
+                <li><strong>7. Journal Consistently:</strong> Record every trade, entry reason, and outcome to identify patterns.</li>
+            </ul>
+            <p style="margin-top: 1rem; color: #2d6a4f; font-weight: bold;">Keep learning, keep trading, keep improving! 📈</p>
+        `;
+    }
+
+    // Clear all trades
+    clearHistory() {
+        if (confirm('Are you sure you want to delete ALL trades? This action cannot be undone.')) {
+            this.trades = [];
+            this.saveTrades();
+            this.renderTrades();
+            this.updateStatistics();
+            this.showNotification('All trades cleared!');
+        }
+    }
+}
+
+// Initialize app when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    new TradingJournal();
+});
