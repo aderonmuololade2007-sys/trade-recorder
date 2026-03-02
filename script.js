@@ -423,6 +423,24 @@ class TradingJournal {
         const questionLower = question.toLowerCase();
         const trades = this.trades;
 
+        // Direct SMC concept explanations
+        if (questionLower.includes('order block')) {
+            return this.explainOrderBlock();
+        }
+        if (questionLower.includes('mitigation') || questionLower.includes('mitigation block')) {
+            return this.explainMitigationBlock();
+        }
+        if (questionLower.includes('liquidity')) {
+            return this.explainLiquidityZones();
+        }
+        if (questionLower.includes('market structure')) {
+            return this.explainMarketStructure();
+        }
+        if (questionLower.includes('entry') && questionLower.includes('smc')) {
+            return this.explainEntryChecklist();
+        }
+
+        // Existing analytics
         // SMC Strategy Analysis
         if (questionLower.includes('strategy') || questionLower.includes('improve') || questionLower.includes('better')) {
             return this.analyzeStrategy(trades);
@@ -646,6 +664,56 @@ class TradingJournal {
                 <li>✓ Liquidity zone proximity checked</li>
             </ul>
         `;
+    }
+
+    // SMC concept explanations for direct questions
+    explainOrderBlock() {
+        return `
+            <h3 style="color: #2d6a4f; margin-bottom: 1rem;">🧱 What is an Order Block?</h3>
+            <p>An order block is the last bearish candle before a bullish impulse (or vice
+            versa) that institutions use to enter positions. Smart traders look to buy
+            on a retest of bullish order blocks and sell on retests of bearish ones.
+            </p>
+            <p><strong>Tip:</strong> Identify order blocks on higher timeframes and
+            execute on lower ones for precision.</p>
+        `;
+    }
+
+    explainMitigationBlock() {
+        return `
+            <h3 style="color: #2d6a4f; margin-bottom: 1rem;">🛡️ Mitigation Block</h3>
+            <p>Mitigation blocks occur when price returns to an unfilled portion of an
+            order block after a breakout. They often provide low-risk entries and are
+            considered "discount" or "premium" zones.</p>
+            <p><strong>SMC tip:</strong> Look for wick rejection or small bodies inside the
+            block for confirmation.</p>
+        `;
+    }
+
+    explainLiquidityZones() {
+        return `
+            <h3 style="color: #2d6a4f; margin-bottom: 1rem;">💧 Liquidity Zones</h3>
+            <p>Liquidity zones are areas where stop orders cluster, usually around
+            swing highs/lows or round numbers. Smart money often "hunts" these stops
+            before reversing the market.</p>
+            <p><strong>Strategy:</strong> Avoid placing stops directly in these zones;
+            instead use them to gauge where price may spike before moving.</p>
+        `;
+    }
+
+    explainMarketStructure() {
+        return `
+            <h3 style="color: #2d6a4f; margin-bottom: 1rem;">🏗️ Market Structure</h3>
+            <p>Market structure refers to the pattern of highs and lows. Higher highs
+            and higher lows indicate an uptrend, while lower highs and lower lows
+            indicate a downtrend.</p>
+            <p><strong>SMC application:</strong> Trade with the trend and use structure
+            breaks to signal potential reversals.</p>
+        `;
+    }
+
+    explainEntryChecklist() {
+        return this.analyzeSMCConcepts(this.trades);
     }
 
     // Generate general insights
