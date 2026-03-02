@@ -28,9 +28,13 @@ html, body {
     width: 100%;
     height: 100%;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: var(--forest-bg);
+    background: linear-gradient(135deg, var(--forest-bg) 0%, #e8f5e9 100%);
     color: var(--text-dark);
     scroll-behavior: smooth;
+}
+
+.header {
+    border-bottom: 3px solid var(--forest-light);
 }
 
 .container {
@@ -38,6 +42,74 @@ html, body {
     display: flex;
     flex-direction: column;
     background-color: var(--forest-bg);
+}
+
+/* ============= LOGIN OVERLAY ============= */
+.login-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(27, 67, 50, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+.login-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.login-box {
+    background: var(--forest-bg);
+    padding: 2rem;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: var(--shadow);
+    border: 2px solid var(--forest-main);
+}
+
+.login-box h2 {
+    margin-bottom: 1rem;
+    color: var(--forest-dark);
+    font-size: 1.5rem;
+}
+
+.login-box input {
+    width: 100%;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    border: 2px solid var(--forest-main);
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+.login-box input:focus {
+    outline: none;
+    border-color: var(--forest-light);
+    box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.1);
+}
+
+.login-message {
+    color: var(--danger);
+    margin-bottom: 0.5rem;
+    height: 1rem;
+    font-size: 0.9rem;
+}
+
+.btn-submit {
+    background: linear-gradient(135deg, var(--forest-light) 0%, var(--forest-main) 100%);
+}
+
+.btn-submit:hover {
+    background: linear-gradient(135deg, var(--forest-main) 0%, var(--forest-light) 100%);
 }
 
 /* ============= HEADER ============= */
@@ -206,6 +278,9 @@ html, body {
     font-size: 0.9rem;
 }
 
+#logoutBtn {
+    display: none;
+}
 .btn-danger:hover {
     background: #d62828;
 }
