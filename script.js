@@ -934,17 +934,25 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('logoutBtn').addEventListener('click', logout);
 
     // also handle Enter key in overlay
-    ['loginUsername','loginPassword'].forEach(id => {
-        document.getElementById(id).addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') handleLogin();
-        });
+    ['loginUsername','loginPassword','loginEmail','loginPassword'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleLogin();
+            });
+        }
     });
 
-    if (!checkLogin()) {
-        showOverlay(true);
-    } else {
-        showOverlay(false);
+    // Use Firebase auth state observer (defined earlier) to show/hide overlay and
+    // instantiate the app when a user is signed in. If a user is already signed
+    // in, the onAuthStateChanged callback will create `window.journal` and call
+    // the constructor which runs `initChart()`.
+    if (firebase.auth().currentUser) {
+        // user already signed in
         document.getElementById('logoutBtn').style.display = 'block';
-        new TradingJournal();
+        if (!window.journal) window.journal = new TradingJournal();
+        showOverlay(false);
+    } else {
+        // overlay will be shown by onAuthStateChanged when needed
     }
 });
