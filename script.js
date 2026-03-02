@@ -466,6 +466,11 @@ class TradingJournal {
             return this.analyzeSMCConcepts(trades);
         }
 
+        // trade-specific advice
+        if (questionLower.includes('last trade') || questionLower.includes('recent trade') || questionLower.includes('this trade')) {
+            return this.analyzeTradeImprovements(trades);
+        }
+
         // Default: General improvement suggestions
         return this.generateGeneralInsights(trades);
     }
@@ -714,6 +719,46 @@ class TradingJournal {
 
     explainEntryChecklist() {
         return this.analyzeSMCConcepts(this.trades);
+    }
+
+    // Provide psychological trading tips
+    analyzePsychology() {
+        return `
+            <h3 style="color: #2d6a4f; margin-bottom: 1rem;">🧠 Trading Psychology Tips</h3>
+            <ul style="margin-left:1.5rem; color:#1b263b;">
+                <li>Keep your journal honest; record emotions and decisions.</li>
+                <li>Set predefined risk limits and obey them to avoid revenge trading.</li>
+                <li>Review losing trades calmly and look for patterns rather than blaming luck.</li>
+                <li>Use routines (pre-market checklists, post-trade review) to build discipline.</li>
+                <li>Take breaks after a string of losses to reset your mindset.</li>
+                <li>Always trade with a plan and avoid FOMO entries.</li>
+            </ul>
+        `;
+    }
+
+    // Analyze improvements for last trade
+    analyzeTradeImprovements(trades) {
+        if (trades.length === 0) {
+            return `
+                <h3 style="color: #2d6a4f; margin-bottom: 1rem;">🔍 Trade Improvement</h3>
+                <p>No trades available. Record some trades first!</p>
+            `;
+        }
+        const last = trades[0];
+        const rrParts = last.riskReward.split(':');
+        const rr = parseFloat(rrParts[1]) || 0;
+        const messages = [];
+        messages.push(`<p>Last trade was a <strong>${last.result}</strong> on <strong>${last.pair}</strong> with entry at ${last.entryPoint} and exit at ${last.exitPoint || 'N/A'}.</p>`);
+        if (rr < 2) {
+            messages.push('<p>Risk/Reward ratio was below 1:2; consider targeting larger moves or tightening stops.</p>');
+        } else {
+            messages.push('<p>Good R:R ratio; keep this discipline.</p>');
+        }
+        if (last.smcStrategy) {
+            messages.push(`<p>Strategy used: ${this.escapeHtml(last.smcStrategy)}. Review whether price respected your order/mgmt zones.</p>`);
+        }
+        messages.push('<p>Psychology note: stay objective; if you felt anxious or rushed, step back and refine your routine.</p>');
+        return `<h3 style="color:#2d6a4f;margin-bottom:1rem;">🔍 Last Trade Analysis</h3>${messages.join('')}`;
     }
 
     // Generate general insights
