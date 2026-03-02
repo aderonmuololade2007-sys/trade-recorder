@@ -180,11 +180,17 @@ class TradingJournal {
         };
 
         this.trades.unshift(trade);
+        console.log('handleFormSubmit added trade', trade);
         this.saveTrades();
+        console.log('trades after save', this.trades.length, localStorage.getItem('finspotTrades'));
         // clear any active filters so the new trade is visible
         document.getElementById('filterPair').value = '';
         document.getElementById('filterResult').value = '';
-        this.renderTrades();
+        try {
+            this.renderTrades();
+        } catch (err) {
+            console.error('renderTrades error on submit', err);
+        }
         this.updateStatistics();
         this.resetForm();
         this.showNotification('Trade recorded successfully!');
