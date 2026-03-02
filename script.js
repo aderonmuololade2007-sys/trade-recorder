@@ -3,26 +3,13 @@
 // AI-Powered Forex Trading Journal
 // ============================================
 
-// simple auth using localStorage
-function getUsers() {
-    const u = localStorage.getItem('finspotUsers');
-    return u ? JSON.parse(u) : {};
-}
-
-function saveUsers(users) {
-    localStorage.setItem('finspotUsers', JSON.stringify(users));
-}
-
-function checkLogin() {
-    return localStorage.getItem('finspotLoggedIn') === 'true';
-}
-
+// Firebase authentication helpers
 function showOverlay(show) {
     const overlay = document.getElementById('loginOverlay');
     if (show) {
         overlay.classList.remove('hidden');
         setTimeout(() => {
-            document.getElementById('loginUsername').focus();
+            document.getElementById('loginEmail').focus();
         }, 50);
     } else {
         overlay.classList.add('hidden');
@@ -30,50 +17,64 @@ function showOverlay(show) {
 }
 
 function handleLogin() {
-    const u = document.getElementById('loginUsername').value.trim();
-    const p = document.getElementById('loginPassword').value;
-    const msg = document.getElementById('loginMessage');
-    const users = getUsers();
-    if (users[u] && users[u] === p) {
-        localStorage.setItem('finspotLoggedIn', 'true');
-        showOverlay(false);
-        msg.textContent = '';        document.getElementById('logoutBtn').style.display = 'block';        // initialize journal after login if not already
-        if (!window.journal) {
-            window.journal = new TradingJournal();
-        }
-    } else {
-        msg.textContent = 'Invalid credentials';
-    }
-}
-
-function handleRegister() {
-    const u = document.getElementById('loginUsername').value.trim();
+    const email = document.getElementById('loginEmail').value.trim();
     const p = document.getElementById('loginPassword').value;
     const msg = document.getElementById('loginMessage');
     msg.style.color = '#e63946';
-    if (!u || !p) { msg.textContent = 'Provide both fields'; return; }
-    const users = getUsers();
-    if (users[u]) {
-        msg.textContent = 'Username taken';
-    } else {
-        users[u] = p;
-        saveUsers(users);
-        // automatically log user in
-        localStorage.setItem('finspotLoggedIn', 'true');
-        showOverlay(false);
-        document.getElementById('logoutBtn').style.display = 'block';
-        msg.textContent = '';
-        if (!window.journal) {
-            window.journal = new TradingJournal();
-        }
-    }
+    if (!email || !p) { msg.textContent = 'Enter email and password'; return; }
+    firebase.auth().signInWithEmailAndPassword(email, p)
+        .then(() => {
+            msg.textContent = '';
+            document.getElementById('logoutBtn').style.display = 'block';
+            if (!window.journal) {
+                window.journal = new TradingJournal();
+            }
+            showOverlay(false);
+        })
+        .catch(err => {
+            msg.textContent = err.message;
+        });
+}
+
+function handleRegister() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const p = document.getElementById('loginPassword').value;
+    const msg = document.getElementById('loginMessage');
+    msg.style.color = '#e63946';
+    if (!email || !p) { msg.textContent = 'Enter email and password'; return; }
+    firebase.auth().createUserWithEmailAndPassword(email, p)
+        .then(() => {
+            msg.style.color = '#06d6a0';
+            msg.textContent = 'Registered and logged in!';
+            document.getElementById('logoutBtn').style.display = 'block';
+            if (!window.journal) {
+                window.journal = new TradingJournal();
+            }
+            showOverlay(false);
+        })
+        .catch(err => {
+            msg.textContent = err.message;
+        });
 }
 
 function logout() {
-    localStorage.removeItem('finspotLoggedIn');
-    // full reload to clear journal instance & return to login screen
-    location.reload();
+    firebase.auth().signOut().then(() => {
+        location.reload();
+    });
 }
+
+// observe auth state
+firebase.auth().onAuthStateChanged(user => {
+    if (user) {
+        document.getElementById('logoutBtn').style.display = 'block';
+        showOverlay(false);
+        if (!window.journal) {
+            window.journal = new TradingJournal();
+        }
+    } else {
+        showOverlay(true);
+    }
+});
 
 class TradingJournal {
     constructor() {
