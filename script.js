@@ -995,4 +995,87 @@ document.addEventListener('DOMContentLoaded', () => {
         // fail silently; chart will be created later by TradingJournal
         console.warn('Placeholder chart not created:', err?.message || err);
     }
+    // Wire up modal open/close buttons
+    const viewBtn = document.getElementById('viewTradeGraphBtn');
+    if (viewBtn) viewBtn.addEventListener('click', () => showTradeModal());
+    const closeBtn = document.getElementById('closeTradeModal');
+    if (closeBtn) closeBtn.addEventListener('click', () => hideTradeModal());
 });
+
+// Show trade modal and initialize modal chart
+function showTradeModal() {
+    const modal = document.getElementById('tradeModal');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    // initialize or refresh modal chart after it becomes visible
+    setTimeout(() => initModalChart(), 80);
+}
+
+function hideTradeModal() {
+    const modal = document.getElementById('tradeModal');
+    if (!modal) return;
+    modal.classList.add('hidden');
+}
+
+function initModalChart() {
+    const canvas = document.getElementById('tradeChartModal');
+    if (!canvas || !window.Chart) return;
+    const ctx = canvas.getContext('2d');
+
+    // build chronological dataset from saved trades
+    const stored = localStorage.getItem('finspotTrades');
+    const trades = stored ? JSON.parse(stored) : [];
+    const sorted = trades.sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
+    const labels = sorted.map(t => new Date(t.timestamp).toLocaleString());
+    const data = sorted.map(t => t.profitLoss || 0);
+    const pointColors = sorted.map(t => t.result === 'Win' ? '#06d6a0' : (t.result === 'Loss' ? '#e63946' : '#888'));
+
+    // if modal chart already exists, update it
+    if (window._finspotModalChart) {
+        window._finspotModalChart.data.labels = labels;
+        window._finspotModalChart.data.datasets[0].data = data;
+        window._finspotModalChart.data.datasets[0].pointBackgroundColor = pointColors;
+        window._finspotModalChart.update();
+        return;
+    }
+
+    window._finspotModalChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Profit/Loss per Trade (pips)',
+                data: data,
+                backgroundColor: 'rgba(45,106,79,0.08)',
+                borderColor: '#2d6a4f',
+                borderWidth: 2,
+                pointBackgroundColor: pointColors,
+                pointRadius: 6,
+                fill: true,
+                tension: 0.15
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => {
+                            const idx = ctx.dataIndex;
+                            const t = sorted[idx];
+                            if (!t) return '';
+                            return `${t.pair} • ${t.type} • P/L: ${t.profitLoss >= 0 ? '+' : ''}${t.profitLoss} pips`;
+                        },
+                        afterLabel: (ctx) => {
+                            const idx = ctx.dataIndex;
+                            const t = sorted[idx];
+                            if (!t) return '';
+                            return `Entry: ${t.entryPoint || 'N/A'}  Exit: ${t.exitPoint || 'N/A'}`;
+                        }
+                    }
+                }
+            },
+            scales: { y: { beginAtZero: false } }
+        }
+    });
+}
