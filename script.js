@@ -166,8 +166,14 @@ class TradingJournal {
 
     // Set today's date as default
     setTodayDate() {
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('tradeDate').value = today;
+        // Use local timezone to avoid UTC offset causing previous-day dates
+        const d = new Date();
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        const localISO = `${year}-${month}-${day}`;
+        const el = document.getElementById('tradeDate');
+        if (el) el.value = localISO;
     }
 
     // Calculate Risk/Reward Ratio
