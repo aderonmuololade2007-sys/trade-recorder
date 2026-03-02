@@ -63,6 +63,21 @@ function logout() {
     });
 }
 
+function handleReset() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const msg = document.getElementById('loginMessage');
+    msg.style.color = '#e63946';
+    if (!email) { msg.textContent = 'Enter your email to reset'; return; }
+    firebase.auth().sendPasswordResetEmail(email)
+        .then(() => {
+            msg.style.color = '#06d6a0';
+            msg.textContent = 'Reset link sent!';
+        })
+        .catch(err => {
+            msg.textContent = err.message;
+        });
+}
+
 // observe auth state
 firebase.auth().onAuthStateChanged(user => {
     if (user) {
@@ -683,6 +698,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // auth button listeners
     document.getElementById('loginBtn').addEventListener('click', handleLogin);
     document.getElementById('registerBtn').addEventListener('click', handleRegister);
+    document.getElementById('resetBtn').addEventListener('click', handleReset);
     document.getElementById('logoutBtn').addEventListener('click', logout);
 
     // also handle Enter key in overlay
