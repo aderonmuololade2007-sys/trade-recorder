@@ -229,6 +229,11 @@ class TradingJournal {
 
         // debug logging
         console.log('renderTrades called', { all: this.trades.length, filterPair, filterResult });
+        const debugEl = document.getElementById('historyDebug');
+        if (debugEl) {
+            debugEl.style.display = 'block';
+            debugEl.textContent = `Total loaded trades: ${this.trades.length}`;
+        }
 
         let filteredTrades = this.trades.filter(trade => {
             const pairMatch = !filterPair || trade.pair === filterPair;
