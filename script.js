@@ -454,32 +454,37 @@ class TradingJournal {
     updateStatistics() {
         const total = this.trades.length;
         const wins = this.trades.filter(t => t.result === 'Win').length;
-        const winRate = total > 0 ? ((wins / total) * 100).toFixed(1) : 0;
-        const totalPL = this.trades.reduce((sum, t) => sum + (t.profitLoss || 0), 0).toFixed(1);
-        
-        const ratios = this.trades
-            .map(t => {
-                const ratioStr = t.riskReward.split(':')[1];
-                return parseFloat(ratioStr) || 0;
-            })
-            .filter(r => r > 0);
-        const avgRR = ratios.length > 0 ? (ratios.reduce((a, b) => a + b) / ratios.length).toFixed(2) : 0;
-        const avgLot = total > 0 ? (this.trades.reduce((s,t)=> s + (t.lotSize||0),0)/total).toFixed(2) : 0;
+        // total P/L as number
+        const totalPLnum = this.trades.reduce((sum, t) => sum + (Number(t.profitLoss) || 0), 0);
+        const totalPL = totalPLnum.toFixed(1);
 
-        // log for debugging and optionally show on page briefly
+        // compute R:R per trade robustly: prefer riskReward string (1:2.5), else compute from entry/SL/TP
+        const parseRR = (t) => {
+            if (t && typeof t.riskReward === 'string' && t.riskReward.includes(':')) {
+                const parts = t.riskReward.split(':');
+                const val = parseFloat(parts[1]);
+                if (!isNaN(val) && val > 0) return val;
+            }
+            const entry = Number(t.entryPoint) || 0;
+            const sl = Number(t.stopLoss) || 0;
+            const tp = Number(t.takeProfit) || 0;
+            const risk = Math.abs(entry - sl);
+            const reward = Math.abs(tp - entry);
+            return risk > 0 ? (reward / risk) : 0;
+        };
+
+        const ratios = this.trades.map(parseRR).filter(r => r > 0);
+        const avgRR = ratios.length > 0 ? (ratios.reduce((a, b) => a + b) / ratios.length).toFixed(2) : '—';
+        const avgLot = total > 0 ? (this.trades.reduce((s, t) => s + (Number(t.lotSize) || 0), 0) / total).toFixed(2) : '—';
+
+        // log for debugging (console only). keep the UI clean by not showing the red debug block.
         console.log('updateStatistics', { total, wins, winRate, totalPL, avgRR, avgLot });
-        const dbg = document.getElementById('statsDebug');
-        if (dbg) {
-            dbg.style.display = 'block';
-            dbg.textContent = `DEBUG stat values: total=${total} wins=${wins} winRate=${winRate} totalPL=${totalPL} avgRR=${avgRR} avgLot=${avgLot}`;
-            // hide debug info after a short interval so normal users aren't distracted
-            setTimeout(() => { dbg.style.display = 'none'; }, 5000);
-        }
 
         document.getElementById('totalTrades').textContent = total;
         document.getElementById('winRate').textContent = winRate + '%';
-        document.getElementById('totalPL').textContent = totalPL;
+        document.getElementById('totalPL').textContent = (totalPLnum > 0 ? '+' : '') + totalPL;
         document.getElementById('avgRR').textContent = avgRR;
+        document.getElementById('avgLot').textContent = avgLot;
         document.getElementById('avgLot').textContent = avgLot;
         // refresh chart after updating stats
         this.updateChart();
