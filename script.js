@@ -165,6 +165,7 @@ class TradingJournal {
             riskReward: document.getElementById('riskReward').value,
             result: document.getElementById('tradeResult').value || 'Pending',
             profitLoss: parseFloat(document.getElementById('profitLoss').value) || 0,
+            lotSize: parseFloat(document.getElementById('lotSize').value) || 0,
             smcStrategy: document.getElementById('smcStrategy').value,
             notes: document.getElementById('tradeNotes').value,
             timestamp: new Date().toISOString()
@@ -307,6 +308,10 @@ class TradingJournal {
                         <div class="trade-detail-label">P/L (Pips)</div>
                         <div class="trade-detail-value ${profitLossClass}">${profitLossSymbol}${trade.profitLoss.toFixed(1)}</div>
                     </div>
+                    <div class="trade-detail">
+                        <div class="trade-detail-label">Lot Size</div>
+                        <div class="trade-detail-value">${trade.lotSize.toFixed(2)}</div>
+                    </div>
                 </div>
 
                 ${trade.smcStrategy ? `
@@ -395,11 +400,13 @@ class TradingJournal {
             })
             .filter(r => r > 0);
         const avgRR = ratios.length > 0 ? (ratios.reduce((a, b) => a + b) / ratios.length).toFixed(2) : 0;
+        const avgLot = total > 0 ? (this.trades.reduce((s,t)=> s + (t.lotSize||0),0)/total).toFixed(2) : 0;
 
         document.getElementById('totalTrades').textContent = total;
         document.getElementById('winRate').textContent = winRate + '%';
         document.getElementById('totalPL').textContent = totalPL;
         document.getElementById('avgRR').textContent = avgRR;
+        document.getElementById('avgLot').textContent = avgLot;
         // refresh chart after updating stats
         this.updateChart();
     }
@@ -418,23 +425,34 @@ class TradingJournal {
         }
 
         this.chart = new Chart(ctx, {
-            type: 'line',
+            type: 'bar',
             data: {
                 labels: [],
-                datasets: [{
-                    label: 'Profit/Loss per Trade (pips)',
-                    backgroundColor: 'rgba(45,106,79,0.2)',
-                    borderColor: '#2d6a4f',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.2
-                }]
+                datasets: [
+                    {
+                        label: 'Lot Size',
+                        data: [],
+                        backgroundColor: 'rgba(45,106,79,0.4)',
+                        borderColor: '#2d6a4f',
+                        borderWidth: 1,
+                        yAxisID: 'y1'
+                    },
+                    {
+                        label: 'P/L per Trade (pips)',
+                        type: 'line',
+                        data: [],
+                        borderColor: '#2d6a4f',
+                        backgroundColor: 'rgba(45,106,79,0.2)',
+                        pointRadius: 4,
+                        fill: false,
+                        tension: 0.2,
+                        yAxisID: 'y'
+                    }
+                ]
             },
             options: {
                 responsive: true,
-                scales: {
-                    y: { beginAtZero: true }
-                }
+                scales: { y1: { beginAtZero: true, position: 'left' }, y: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false } } }
             }
         });
         // store global reference so a placeholder created earlier can be reused
@@ -447,7 +465,8 @@ class TradingJournal {
         // show trades in chronological order (oldest -> newest)
         const sorted = [...this.trades].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
         const labels = sorted.map(t => this.formatDate(t.date));
-        const data = sorted.map(t => t.profitLoss || 0);
+        const profitData = sorted.map(t => t.profitLoss || 0);
+        const lotData = sorted.map(t => t.lotSize || 0);
 
         // color points by win/loss (green for profit, red for loss, gray for pending)
         const pointColors = sorted.map(t => {
@@ -457,17 +476,39 @@ class TradingJournal {
         });
 
         this.chart.data.labels = labels;
-        this.chart.data.datasets[0].data = data;
-        this.chart.data.datasets[0].pointBackgroundColor = pointColors;
-        this.chart.data.datasets[0].pointRadius = 6;
+        this.chart.data.datasets[0].data = lotData; // bar dataset
+        // ensure second dataset exists for profit line
+        if (this.chart.data.datasets.length < 2) {
+            this.chart.data.datasets.push({
+                label: 'P/L per Trade (pips)',
+                type: 'line',
+                data: profitData,
+                borderColor: '#2d6a4f',
+                backgroundColor: 'rgba(45,106,79,0.2)',
+                pointBackgroundColor: pointColors,
+                pointRadius: 6,
+                fill: false,
+                tension: 0.2,
+                yAxisID: 'y'
+            });
+        } else {
+            this.chart.data.datasets[1].data = profitData;
+            this.chart.data.datasets[1].pointBackgroundColor = pointColors;
+        }
+        this.chart.data.datasets[0].backgroundColor = 'rgba(45,106,79,0.4)';
+        this.chart.data.datasets[0].borderColor = '#2d6a4f';
+        this.chart.data.datasets[0].borderWidth = 1;
+
         this.chart.options.plugins = this.chart.options.plugins || {};
-        // custom tooltip to show trade details
         this.chart.options.plugins.tooltip = {
             callbacks: {
                 label: (ctx) => {
                     const idx = ctx.dataIndex;
                     const trade = sorted[idx];
                     if (!trade) return '';
+                    if (ctx.datasetIndex === 0) {
+                        return `Lot Size: ${trade.lotSize}`;
+                    }
                     const pl = (trade.profitLoss || 0);
                     return `${trade.pair} • ${trade.type} • P/L: ${pl >= 0 ? '+' : ''}${pl} pips`;
                 },
@@ -479,6 +520,10 @@ class TradingJournal {
                 }
             }
         };
+        // make dual-axis
+        this.chart.options.scales = this.chart.options.scales || {};
+        this.chart.options.scales.y = { beginAtZero: true, position: 'right' };
+        this.chart.options.scales.y1 = { beginAtZero: true, position: 'left', grid: { drawOnChartArea: false } };
 
         this.chart.update();
     }
@@ -974,21 +1019,32 @@ document.addEventListener('DOMContentLoaded', () => {
         if (canvas && !window._finspotChart && window.Chart) {
             const ctx = canvas.getContext('2d');
             window._finspotChart = new Chart(ctx, {
-                type: 'line',
+                type: 'bar',
                 data: {
                     labels: [],
-                    datasets: [{
-                        label: 'Profit/Loss per Trade (pips)',
-                        data: [],
-                        backgroundColor: 'rgba(45,106,79,0.08)',
-                        borderColor: '#2d6a4f',
-                        borderWidth: 1.5,
-                        pointRadius: 4,
-                        fill: true,
-                        tension: 0.2
-                    }]
+                    datasets: [
+                        {
+                            label: 'Lot Size',
+                            data: [],
+                            backgroundColor: 'rgba(45,106,79,0.4)',
+                            borderColor: '#2d6a4f',
+                            borderWidth: 1,
+                            yAxisID: 'y1'
+                        },
+                        {
+                            label: 'P/L per Trade (pips)',
+                            type: 'line',
+                            data: [],
+                            borderColor: '#2d6a4f',
+                            backgroundColor: 'rgba(45,106,79,0.2)',
+                            pointRadius: 4,
+                            fill: false,
+                            tension: 0.2,
+                            yAxisID: 'y'
+                        }
+                    ]
                 },
-                options: { responsive: true }
+                options: { responsive: true, scales: { y1: { beginAtZero: true, position: 'left' }, y: { beginAtZero: false, position: 'right', grid: { drawOnChartArea: false } } } }
             });
         }
     } catch (err) {
@@ -1027,33 +1083,46 @@ function initModalChart() {
     const trades = stored ? JSON.parse(stored) : [];
     const sorted = trades.sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
     const labels = sorted.map(t => new Date(t.timestamp).toLocaleString());
-    const data = sorted.map(t => t.profitLoss || 0);
+    const profitData = sorted.map(t => t.profitLoss || 0);
+    const lotData = sorted.map(t => t.lotSize || 0);
     const pointColors = sorted.map(t => t.result === 'Win' ? '#06d6a0' : (t.result === 'Loss' ? '#e63946' : '#888'));
 
     // if modal chart already exists, update it
     if (window._finspotModalChart) {
         window._finspotModalChart.data.labels = labels;
-        window._finspotModalChart.data.datasets[0].data = data;
-        window._finspotModalChart.data.datasets[0].pointBackgroundColor = pointColors;
+        window._finspotModalChart.data.datasets[0].data = lotData;
+        window._finspotModalChart.data.datasets[1].data = profitData;
+        window._finspotModalChart.data.datasets[1].pointBackgroundColor = pointColors;
         window._finspotModalChart.update();
         return;
     }
 
     window._finspotModalChart = new Chart(ctx, {
-        type: 'line',
+        type: 'bar',
         data: {
             labels: labels,
-            datasets: [{
-                label: 'Profit/Loss per Trade (pips)',
-                data: data,
-                backgroundColor: 'rgba(45,106,79,0.08)',
-                borderColor: '#2d6a4f',
-                borderWidth: 2,
-                pointBackgroundColor: pointColors,
-                pointRadius: 6,
-                fill: true,
-                tension: 0.15
-            }]
+            datasets: [
+                {
+                    label: 'Lot Size',
+                    data: lotData,
+                    backgroundColor: 'rgba(45,106,79,0.4)',
+                    borderColor: '#2d6a4f',
+                    borderWidth: 1,
+                    yAxisID: 'y1'
+                },
+                {
+                    label: 'P/L per Trade (pips)',
+                    type: 'line',
+                    data: profitData,
+                    borderColor: '#2d6a4f',
+                    backgroundColor: 'rgba(45,106,79,0.2)',
+                    pointBackgroundColor: pointColors,
+                    pointRadius: 6,
+                    fill: false,
+                    tension: 0.15,
+                    yAxisID: 'y'
+                }
+            ]
         },
         options: {
             responsive: true,
@@ -1064,6 +1133,9 @@ function initModalChart() {
                             const idx = ctx.dataIndex;
                             const t = sorted[idx];
                             if (!t) return '';
+                            if (ctx.datasetIndex === 0) {
+                                return `Lot Size: ${t.lotSize}`;
+                            }
                             return `${t.pair} • ${t.type} • P/L: ${t.profitLoss >= 0 ? '+' : ''}${t.profitLoss} pips`;
                         },
                         afterLabel: (ctx) => {
@@ -1075,7 +1147,7 @@ function initModalChart() {
                     }
                 }
             },
-            scales: { y: { beginAtZero: false } }
+            scales: { y1: { beginAtZero: true, position: 'left' }, y: { beginAtZero: false, position: 'right', grid: { drawOnChartArea: false } } }
         }
     });
 }
