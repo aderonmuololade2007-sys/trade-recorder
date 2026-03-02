@@ -112,6 +112,8 @@ class TradingJournal {
         console.log('loadTrades raw', stored);
         try {
             this.trades = stored ? JSON.parse(stored) : [];
+            // ensure old entries have lotSize field
+            this.trades = this.trades.map(t => ({ ...t, lotSize: typeof t.lotSize === 'number' ? t.lotSize : 0 }));
         } catch (e) {
             console.error('Failed to parse stored trades', e);
             // clear corrupted data
@@ -339,7 +341,7 @@ class TradingJournal {
                     </div>
                     <div class="trade-detail">
                         <div class="trade-detail-label">Lot Size</div>
-                        <div class="trade-detail-value">${trade.lotSize.toFixed(2)}</div>
+                        <div class="trade-detail-value">${(trade.lotSize||0).toFixed(2)}</div>
                     </div>
                 </div>
 
