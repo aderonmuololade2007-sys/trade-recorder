@@ -405,6 +405,9 @@ class TradingJournal {
         const avgRR = ratios.length > 0 ? (ratios.reduce((a, b) => a + b) / ratios.length).toFixed(2) : 0;
         const avgLot = total > 0 ? (this.trades.reduce((s,t)=> s + (t.lotSize||0),0)/total).toFixed(2) : 0;
 
+        // log for debugging
+        console.log('updateStatistics', { total, wins, winRate, totalPL, avgRR, avgLot });
+
         document.getElementById('totalTrades').textContent = total;
         document.getElementById('winRate').textContent = winRate + '%';
         document.getElementById('totalPL').textContent = totalPL;
