@@ -406,8 +406,17 @@ class TradingJournal {
 
     // initialize and update chart elements
     initChart() {
-        const ctx = document.getElementById('tradeChart')?.getContext('2d');
-        if (!ctx) return;
+        // If a placeholder chart was created earlier, reuse it to avoid
+        // double-instantiation and ensure the canvas is visible immediately.
+        const canvas = document.getElementById('tradeChart');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (window._finspotChart) {
+            this.chart = window._finspotChart;
+            this.updateChart();
+            return;
+        }
+
         this.chart = new Chart(ctx, {
             type: 'line',
             data: {
@@ -428,6 +437,8 @@ class TradingJournal {
                 }
             }
         });
+        // store global reference so a placeholder created earlier can be reused
+        window._finspotChart = this.chart;
         this.updateChart();
     }
 
@@ -954,5 +965,34 @@ document.addEventListener('DOMContentLoaded', () => {
         showOverlay(false);
     } else {
         // overlay will be shown by onAuthStateChanged when needed
+    }
+    // Create a lightweight placeholder chart immediately so users can see the
+    // graph area even before signing in. TradingJournal will reuse this chart
+    // instance when it initializes.
+    try {
+        const canvas = document.getElementById('tradeChart');
+        if (canvas && !window._finspotChart && window.Chart) {
+            const ctx = canvas.getContext('2d');
+            window._finspotChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Profit/Loss per Trade (pips)',
+                        data: [],
+                        backgroundColor: 'rgba(45,106,79,0.08)',
+                        borderColor: '#2d6a4f',
+                        borderWidth: 1.5,
+                        pointRadius: 4,
+                        fill: true,
+                        tension: 0.2
+                    }]
+                },
+                options: { responsive: true }
+            });
+        }
+    } catch (err) {
+        // fail silently; chart will be created later by TradingJournal
+        console.warn('Placeholder chart not created:', err?.message || err);
     }
 });
