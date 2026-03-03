@@ -478,6 +478,10 @@ class TradingJournal {
         const avgLot = total > 0 ? (this.trades.reduce((s, t) => s + (Number(t.lotSize) || 0), 0) / total).toFixed(2) : '—';
 
         // log for debugging (console only). keep the UI clean by not showing the red debug block.
+        // compute win rate using closed trades (exclude Pending)
+        const closed = this.trades.filter(t => t.result && t.result !== 'Pending');
+        const winRate = closed.length > 0 ? ((wins / closed.length) * 100).toFixed(1) : '0';
+
         console.log('updateStatistics', { total, wins, winRate, totalPL, avgRR, avgLot });
 
         document.getElementById('totalTrades').textContent = total;
