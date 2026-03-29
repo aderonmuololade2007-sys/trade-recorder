@@ -12,6 +12,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
     <script>
       // Initialize Firebase with config
+      console.log('Initializing Firebase...');
       const firebaseConfig = window.appConfig ? window.appConfig.firebase : {
         apiKey: "AIzaSyC_4SayVRS_pxja8ziAu0f4mFivhGNPFxo",
         authDomain: "trade-recorder-28cfe.firebaseapp.com",
@@ -21,7 +22,9 @@
         appId: "1:74422432536:web:037b446e306722240e3067222401646d",
         measurementId: "G-YNFH88YXSJ"
       };
+      console.log('Firebase config:', firebaseConfig);
       firebase.initializeApp(firebaseConfig);
+      console.log('Firebase initialized successfully');
     </script>
 </head>
 <body>
@@ -40,6 +43,7 @@
                 </button>
                 <button id="resendVerificationBtn" class="btn-submit" style="margin-top:0.5rem; font-size:0.85rem;background:#f77f00;color:white;border:none;text-decoration:none;display:none;">Resend Verification Email</button>
                 <button id="resetBtn" class="btn-submit" style="margin-top:0.5rem; font-size:0.85rem;background:transparent;color:var(--forest-dark);border:none;text-decoration:underline;">Forgot password?</button>
+                <button id="skipAuthBtn" class="btn-submit" style="margin-top:0.5rem; font-size:0.85rem;background:#28a745;color:white;border:none;">⚠️ Skip Login (Test Only)</button>
             </div>
         </div>
         <!-- Header -->

@@ -1848,6 +1848,14 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('resetBtn').addEventListener('click', handleReset);
     document.getElementById('resendVerificationBtn').addEventListener('click', handleResendVerification);
     document.getElementById('logoutBtn').addEventListener('click', logout);
+    document.getElementById('skipAuthBtn').addEventListener('click', () => {
+        console.log('Skipping authentication for testing');
+        document.getElementById('logoutBtn').style.display = 'block';
+        if (!window.journal) {
+            window.journal = new TradingJournal();
+        }
+        showOverlay(false);
+    });
 
     // Check for successful payment return
     handlePaymentSuccess();
@@ -1855,17 +1863,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Firebase auth state observer
 firebase.auth().onAuthStateChanged((user) => {
+    console.log('onAuthStateChanged fired:', user ? 'User logged in: ' + user.email : 'No user');
     if (user) {
         // User is signed in
         console.log('User authenticated:', user.email);
         document.getElementById('logoutBtn').style.display = 'block';
         if (!window.journal) {
+            console.log('Creating TradingJournal instance');
             window.journal = new TradingJournal();
         }
         showOverlay(false);
+        console.log('Login overlay hidden, main content should be visible');
     } else {
         // User is signed out
-        console.log('User not authenticated');
+        console.log('User not authenticated - showing login overlay');
         document.getElementById('logoutBtn').style.display = 'none';
         showOverlay(true);
     }
