@@ -8,7 +8,9 @@
 console.log('app loaded at', location.href, 'protocol', location.protocol);
 
 function showOverlay(show) {
+    console.log('showOverlay called with:', show);
     const overlay = document.getElementById('loginOverlay');
+    console.log('Overlay element:', overlay);
     if (show) {
         overlay.classList.remove('hidden');
         setTimeout(() => {
@@ -16,6 +18,7 @@ function showOverlay(show) {
         }, 50);
     } else {
         overlay.classList.add('hidden');
+        console.log('Overlay should now be hidden');
     }
 }
 
@@ -1133,7 +1136,7 @@ class TradingJournal {
         const ctx = canvas.getContext('2d');
         if (window._finspotChart) {
             this.chart = window._finspotChart;
-            this.updateChart();
+            // Don't call updateChart here to avoid potential recursion
             return;
         }
 
@@ -1170,11 +1173,16 @@ class TradingJournal {
         });
         // store global reference so a placeholder created earlier can be reused
         window._finspotChart = this.chart;
-        this.updateChart();
+        // Don't call updateChart here to avoid potential recursion
+        // updateChart will be called by updateStatistics when needed
     }
 
     updateChart() {
-        if (!this.chart) return;
+        if (!this.chart) {
+            console.log('Chart not initialized, skipping update');
+            return;
+        }
+        console.log('Updating chart with', this.trades.length, 'trades');
         // show trades in chronological order (oldest -> newest)
         const sorted = [...this.trades].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
         const labels = sorted.map(t => this.formatDate(t.date));
@@ -1879,10 +1887,30 @@ firebase.auth().onAuthStateChanged((user) => {
         document.getElementById('logoutBtn').style.display = 'block';
         if (!window.journal) {
             console.log('Creating TradingJournal instance');
-            window.journal = new TradingJournal();
+            try {
+                window.journal = new TradingJournal();
+                console.log('TradingJournal created successfully');
+            } catch (error) {
+                console.error('Error creating TradingJournal:', error);
+            }
+        } else {
+            console.log('TradingJournal instance already exists');
         }
         showOverlay(false);
         console.log('Login overlay hidden, main content should be visible');
+        
+        // Check if main content is visible
+        setTimeout(() => {
+            const mainContent = document.querySelector('.main-content');
+            const tradeForm = document.getElementById('tradeForm');
+            const statsSection = document.querySelector('.stats-section');
+            console.log('Main content visibility check:', {
+                mainContent: mainContent ? 'exists' : 'not found',
+                mainContentDisplay: mainContent ? getComputedStyle(mainContent).display : 'N/A',
+                tradeForm: tradeForm ? 'exists' : 'not found',
+                statsSection: statsSection ? 'exists' : 'not found'
+            });
+        }, 100);
     } else {
         // User is signed out
         console.log('User not authenticated - showing login overlay');
