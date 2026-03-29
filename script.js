@@ -679,8 +679,10 @@ Field exists: ${lotSizeField ? 'Yes' : 'No'}`);
 
 class TradingJournal {
     constructor() {
+        console.log('TradingJournal constructor called');
         this.trades = [];
         this.loadTrades();
+        console.log('Trades loaded:', this.trades.length);
         // clear any previously retained filters so all trades show initially
         const fp = document.getElementById('filterPair');
         const fr = document.getElementById('filterResult');
@@ -692,6 +694,7 @@ class TradingJournal {
         this.updateStatistics();
         // after statistics are ready initialize the chart display
         this.initChart();
+        console.log('TradingJournal initialization complete');
     }
 
     // Load trades from localStorage
@@ -1062,6 +1065,8 @@ class TradingJournal {
 
     // Update statistics
     updateStatistics() {
+        console.log('updateStatistics called, trades:', this.trades.length);
+        
         const total = this.trades.length;
         const wins = this.trades.filter(t => t.result === 'Win').length;
         // total P/L as number
@@ -1092,14 +1097,29 @@ class TradingJournal {
         const closed = this.trades.filter(t => t.result && t.result !== 'Pending');
         const winRate = closed.length > 0 ? ((wins / closed.length) * 100).toFixed(1) : '0';
 
-        console.log('updateStatistics', { total, wins, winRate, totalPL, avgRR, avgLot });
+        console.log('updateStatistics calculated:', { total, wins, winRate, totalPL, avgRR, avgLot });
 
-        document.getElementById('totalTrades').textContent = total;
-        document.getElementById('winRate').textContent = winRate + '%';
-        document.getElementById('totalPL').textContent = (totalPLnum > 0 ? '+' : '') + totalPL;
-        document.getElementById('avgRR').textContent = avgRR;
-        document.getElementById('avgLot').textContent = avgLot;
-        document.getElementById('avgLot').textContent = avgLot;
+        // Check if elements exist
+        const totalTradesEl = document.getElementById('totalTrades');
+        const winRateEl = document.getElementById('winRate');
+        const totalPLEl = document.getElementById('totalPL');
+        const avgRREl = document.getElementById('avgRR');
+        const avgLotEl = document.getElementById('avgLot');
+
+        console.log('DOM elements found:', {
+            totalTrades: !!totalTradesEl,
+            winRate: !!winRateEl,
+            totalPL: !!totalPLEl,
+            avgRR: !!avgRREl,
+            avgLot: !!avgLotEl
+        });
+
+        if (totalTradesEl) totalTradesEl.textContent = total;
+        if (winRateEl) winRateEl.textContent = winRate + '%';
+        if (totalPLEl) totalPLEl.textContent = (totalPLnum > 0 ? '+' : '') + totalPL;
+        if (avgRREl) avgRREl.textContent = avgRR;
+        if (avgLotEl) avgLotEl.textContent = avgLot;
+        
         // refresh chart after updating stats
         this.updateChart();
     }
