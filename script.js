@@ -1825,3 +1825,21 @@ document.addEventListener('DOMContentLoaded', () => {
     // Check for successful payment return
     handlePaymentSuccess();
 });
+
+// Firebase auth state observer
+firebase.auth().onAuthStateChanged((user) => {
+    if (user) {
+        // User is signed in
+        console.log('User authenticated:', user.email);
+        document.getElementById('logoutBtn').style.display = 'block';
+        if (!window.journal) {
+            window.journal = new TradingJournal();
+        }
+        showOverlay(false);
+    } else {
+        // User is signed out
+        console.log('User not authenticated');
+        document.getElementById('logoutBtn').style.display = 'none';
+        showOverlay(true);
+    }
+});
