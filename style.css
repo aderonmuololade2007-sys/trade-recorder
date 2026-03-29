@@ -246,7 +246,7 @@ html, body {
 }
 
 .btn-submit {
-    background: linear-gradient(135deg, var(--forest-light) 0%, var(--forest-main) 100%);
+    background: linear-gradient(135deg, var(--deep-blue-light) 0%, var(--deep-blue-main) 100%);
     color: white;
     width: 100%;
     padding: 1rem;
@@ -326,7 +326,7 @@ html, body {
     background: linear-gradient(135deg, rgba(64, 145, 108, 0.05) 0%, rgba(116, 198, 157, 0.05) 100%);
     padding: 1.5rem;
     border-radius: 10px;
-    border: 1px solid var(--forest-lighter);
+    border: 1px solid var(--deep-blue-lighter);
 }
 
 .ai-input-group {
@@ -345,14 +345,14 @@ html, body {
 
 .ai-input-group input:focus {
     outline: none;
-    border-color: var(--forest-light);
+    border-color: var(--deep-blue-light);
 }
 
 .ai-response {
     background: white;
     padding: 1.5rem;
     border-radius: 8px;
-    border-left: 4px solid var(--forest-light);
+    border-left: 4px solid var(--deep-blue-light);
     min-height: 150px;
     max-height: 400px;
     overflow-y: auto;
@@ -374,12 +374,12 @@ html, body {
 }
 
 .stat-card {
-    background: linear-gradient(135deg, var(--forest-light) 0%, var(--forest-lighter) 100%);
+    background: linear-gradient(135deg, var(--deep-blue-light) 0%, var(--deep-blue-lighter) 100%);
     color: white;
     padding: 1.5rem;
     border-radius: 10px;
     text-align: center;
-    box-shadow: 0 4px 8px rgba(45, 106, 79, 0.2);
+    box-shadow: 0 4px 8px rgba(10, 25, 41, 0.2);
 }
 
 .stat-label {
@@ -424,12 +424,12 @@ html, body {
 }
 
 .filter-select:hover {
-    border-color: var(--forest-light);
+    border-color: var(--deep-blue-light);
 }
 
 .filter-select:focus {
     outline: none;
-    border-color: var(--forest-light);
+    border-color: var(--deep-blue-light);
 }
 
 .trades-list {
@@ -471,7 +471,7 @@ html, body {
 .trade-pair {
     font-size: 1.3rem;
     font-weight: 700;
-    color: var(--forest-dark);
+    color: var(--deep-blue-dark);
 }
 
 .trade-date {
@@ -515,8 +515,8 @@ html, body {
 
 .badge-long {
     background: rgba(82, 183, 136, 0.2);
-    color: var(--forest-dark);
-    border: 1px solid var(--forest-lighter);
+    color: var(--deep-blue-dark);
+    border: 1px solid var(--deep-blue-lighter);
 }
 
 .badge-short {
@@ -533,10 +533,10 @@ html, body {
 }
 
 .trade-detail {
-    background: var(--forest-bg);
+    background: var(--deep-blue-bg);
     padding: 1rem;
     border-radius: 8px;
-    border-left: 3px solid var(--forest-light);
+    border-left: 3px solid var(--deep-blue-light);
 }
 
 .trade-detail-label {
@@ -563,11 +563,11 @@ html, body {
 }
 
 .trade-notes-section {
-    background: var(--forest-bg);
+    background: var(--deep-blue-bg);
     padding: 1rem;
     border-radius: 8px;
     margin-top: 1rem;
-    border-left: 3px solid var(--forest-accent);
+    border-left: 3px solid var(--deep-blue-accent);
 }
 
 .trade-notes-label {
@@ -616,18 +616,18 @@ html, body {
 }
 
 .btn-edit {
-    background: var(--forest-accent);
+    background: var(--deep-blue-accent);
     color: white;
-    border: 1px solid var(--forest-light);
+    border: 1px solid var(--deep-blue-light);
 }
 
 .btn-edit:hover {
-    background: var(--forest-light);
+    background: var(--deep-blue-light);
 }
 
 /* ============= FOOTER ============= */
 .footer {
-    background: var(--forest-dark);
+    background: var(--deep-blue-dark);
     color: white;
     text-align: center;
     padding: 1.5rem;
