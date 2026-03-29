@@ -1832,27 +1832,6 @@ function initModalChart() {
         },
         options: {
             responsive: true,
-            plugins: {
-                tooltip: {
-                    callbacks: {
-                        label: (ctx) => {
-                            const idx = ctx.dataIndex;
-                            const t = sorted[idx];
-                            if (!t) return '';
-                            if (ctx.datasetIndex === 0) {
-                                return `Lot Size: ${t.lotSize}`;
-                            }
-                            return `${t.pair} • ${t.type} • P/L: ${t.profitLoss >= 0 ? '+' : ''}${t.profitLoss} pips`;
-                        },
-                        afterLabel: (ctx) => {
-                            const idx = ctx.dataIndex;
-                            const t = sorted[idx];
-                            if (!t) return '';
-                            return `Entry: ${t.entryPoint || 'N/A'}  Exit: ${t.exitPoint || 'N/A'}`;
-                        }
-                    }
-                }
-            },
             scales: { y1: { beginAtZero: true, position: 'left' }, y: { beginAtZero: false, position: 'right', grid: { drawOnChartArea: false } } }
         }
     });

@@ -64,6 +64,7 @@ html, body {
 .login-overlay.hidden {
     opacity: 0;
     pointer-events: none;
+    visibility: hidden;
 }
 
 .login-box {
