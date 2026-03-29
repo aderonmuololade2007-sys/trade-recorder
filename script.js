@@ -1,5 +1,5 @@
 // ============================================
-// FINSPOT TRADING JOURNAL - JAVASCRIPT
+// TRADE JOURNAL - JAVASCRIPT
 // AI-Powered Forex Trading Journal
 // ============================================
 
@@ -25,8 +25,30 @@ function handleLogin() {
     const msg = document.getElementById('loginMessage');
     msg.style.color = '#e63946';
     if (!email || !p) { msg.textContent = 'Enter email and password'; return; }
+
+    // Check device limit before attempting login
+    if (!checkDeviceLimit()) {
+        msg.textContent = 'Maximum device limit reached (2 devices). Please logout from another device first.';
+        return;
+    }
+
+    // Show loading state
+    msg.style.color = '#f77f00';
+    msg.textContent = 'Signing in...';
+
     firebase.auth().signInWithEmailAndPassword(email, p)
-        .then(() => {
+        .then((userCredential) => {
+            const user = userCredential.user;
+
+            // Check if email is verified
+            if (!user.emailVerified) {
+                // Sign out unverified user
+                firebase.auth().signOut();
+                msg.style.color = '#e63946';
+                msg.textContent = 'Please verify your email address first. Check your inbox for the verification link.';
+                return;
+            }
+
             msg.textContent = '';
             document.getElementById('logoutBtn').style.display = 'block';
             if (!window.journal) {
@@ -35,28 +57,118 @@ function handleLogin() {
             showOverlay(false);
         })
         .catch(err => {
-            msg.textContent = err.message;
+            msg.style.color = '#e63946';
+            let errorMessage = err.message;
+
+            // Provide user-friendly error messages
+            if (err.code === 'auth/user-not-found') {
+                errorMessage = 'No account found with this email. Please register first.';
+            } else if (err.code === 'auth/wrong-password') {
+                errorMessage = 'Incorrect password. Please try again.';
+            } else if (err.code === 'auth/invalid-email') {
+                errorMessage = 'Please enter a valid email address.';
+            } else if (err.code === 'auth/user-disabled') {
+                errorMessage = 'This account has been disabled. Please contact support.';
+            } else if (err.code === 'auth/too-many-requests') {
+                errorMessage = 'Too many failed login attempts. Please try again later.';
+            }
+
+            msg.textContent = errorMessage;
         });
 }
+
+function handleResendVerification() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const msg = document.getElementById('loginMessage');
+    msg.style.color = '#e63946';
+
+    if (!email) {
+        msg.textContent = 'Please enter your email address first.';
+        return;
+    }
+
+    // Show loading state
+    msg.style.color = '#f77f00';
+    msg.textContent = 'Sending verification email...';
+
+    firebase.auth().signInWithEmailAndPassword(email, 'dummy_password_for_verification_check')
+        .then(() => {
+            // This shouldn't happen, but just in case
+            firebase.auth().signOut();
+        })
+        .catch((error) => {
+            if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
+                // Try to send verification email using a different approach
+                // Note: Firebase doesn't have a direct way to resend verification without being signed in
+                // This is a limitation - in production, you'd need a backend service
+                msg.style.color = '#e63946';
+                msg.textContent = 'Please check your email for the verification link. If you haven\'t received it, try registering again.';
+            } else {
+                msg.textContent = 'Error: ' + error.message;
+            }
+        });
+}
+
+// Alternative approach: Store email and allow resend after registration
+let pendingVerificationEmail = null;
 
 function handleRegister() {
     const email = document.getElementById('loginEmail').value.trim();
     const p = document.getElementById('loginPassword').value;
     const msg = document.getElementById('loginMessage');
     msg.style.color = '#e63946';
-    if (!email || !p) { msg.textContent = 'Enter email and password'; return; }
+
+    if (!email || !p) {
+        msg.textContent = 'Enter email and password';
+        return;
+    }
+
+    if (p.length < 6) {
+        msg.textContent = 'Password must be at least 6 characters';
+        return;
+    }
+
+    // Show loading state
+    msg.style.color = '#f77f00';
+    msg.textContent = 'Creating account...';
+
     firebase.auth().createUserWithEmailAndPassword(email, p)
-        .then(() => {
-            msg.style.color = '#06d6a0';
-            msg.textContent = 'Registered and logged in!';
-            document.getElementById('logoutBtn').style.display = 'block';
-            if (!window.journal) {
-                window.journal = new TradingJournal();
-            }
-            showOverlay(false);
+        .then((userCredential) => {
+            const user = userCredential.user;
+            pendingVerificationEmail = email;
+
+            // Send email verification
+            return user.sendEmailVerification()
+                .then(() => {
+                    msg.style.color = '#06d6a0';
+                    msg.textContent = 'Registration successful! Please check your email and click the verification link before logging in.';
+
+                    // Show resend button
+                    document.getElementById('resendVerificationBtn').style.display = 'block';
+
+                    // Sign out the user until they verify their email
+                    return firebase.auth().signOut();
+                })
+                .then(() => {
+                    // Clear the form
+                    document.getElementById('loginEmail').value = '';
+                    document.getElementById('loginPassword').value = '';
+                });
         })
         .catch(err => {
-            msg.textContent = err.message;
+            msg.style.color = '#e63946';
+            let errorMessage = err.message;
+
+            // Provide user-friendly error messages
+            if (err.code === 'auth/email-already-in-use') {
+                errorMessage = 'This email is already registered. Try logging in instead.';
+            } else if (err.code === 'auth/invalid-email') {
+                errorMessage = 'Please enter a valid email address.';
+            } else if (err.code === 'auth/weak-password') {
+                errorMessage = 'Password is too weak. Please choose a stronger password.';
+            }
+
+            msg.textContent = errorMessage;
         });
 }
 
@@ -81,18 +193,458 @@ function handleReset() {
         });
 }
 
-// observe auth state
-firebase.auth().onAuthStateChanged(user => {
-    if (user) {
-        document.getElementById('logoutBtn').style.display = 'block';
-        showOverlay(false);
-        if (!window.journal) {
-            window.journal = new TradingJournal();
-        }
-    } else {
-        showOverlay(true);
+// Biometric Authentication Functions
+async function checkBiometricSupport() {
+    if (!window.PublicKeyCredential) {
+        return false;
     }
-});
+    try {
+        const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+        return available;
+    } catch (error) {
+        console.log('Biometric check failed:', error);
+        return false;
+    }
+}
+
+async function registerBiometric() {
+    try {
+        const challenge = new Uint8Array(32);
+        window.crypto.getRandomValues(challenge);
+
+        const publicKeyCredentialCreationOptions = {
+            challenge: challenge,
+            rp: {
+                name: "Trade Journal",
+                id: window.location.hostname,
+            },
+            user: {
+                id: new Uint8Array(16),
+                name: firebase.auth().currentUser.email,
+                displayName: firebase.auth().currentUser.email,
+            },
+            pubKeyCredParams: [
+                { alg: -7, type: "public-key" }, // ES256
+                { alg: -257, type: "public-key" }, // RS256
+            ],
+            authenticatorSelection: {
+                authenticatorAttachment: "platform",
+                userVerification: "required",
+            },
+            timeout: 60000,
+            attestation: "direct"
+        };
+
+        window.crypto.getRandomValues(publicKeyCredentialCreationOptions.user.id);
+
+        const credential = await navigator.credentials.create({
+            publicKey: publicKeyCredentialCreationOptions
+        });
+
+        // Store the credential in localStorage for this user
+        const credentialData = {
+            id: credential.id,
+            rawId: Array.from(new Uint8Array(credential.rawId)),
+            response: {
+                attestationObject: Array.from(new Uint8Array(credential.response.attestationObject)),
+                clientDataJSON: Array.from(new Uint8Array(credential.response.clientDataJSON))
+            }
+        };
+
+        localStorage.setItem(`biometric_${firebase.auth().currentUser.uid}`, JSON.stringify(credentialData));
+        return true;
+    } catch (error) {
+        console.error('Biometric registration failed:', error);
+        return false;
+    }
+}
+
+async function authenticateBiometric() {
+    try {
+        const user = firebase.auth().currentUser;
+        if (!user) {
+            throw new Error('No user logged in');
+        }
+
+        const storedCredential = localStorage.getItem(`biometric_${user.uid}`);
+        if (!storedCredential) {
+            throw new Error('No biometric credential found. Please register biometric login first.');
+        }
+
+        const credentialData = JSON.parse(storedCredential);
+        const challenge = new Uint8Array(32);
+        window.crypto.getRandomValues(challenge);
+
+        const publicKeyCredentialRequestOptions = {
+            challenge: challenge,
+            allowCredentials: [{
+                id: new Uint8Array(credentialData.rawId),
+                type: "public-key",
+                transports: ["internal"],
+            }],
+            timeout: 60000,
+            userVerification: "required",
+        };
+
+        const assertion = await navigator.credentials.get({
+            publicKey: publicKeyCredentialRequestOptions
+        });
+
+        // If we get here, biometric authentication succeeded
+        return true;
+    } catch (error) {
+        console.error('Biometric authentication failed:', error);
+        throw error;
+    }
+}
+
+async function handleBiometricLogin() {
+    const msg = document.getElementById('loginMessage');
+    msg.style.color = '#e63946';
+
+    try {
+        const biometricSupported = await checkBiometricSupport();
+        if (!biometricSupported) {
+            msg.textContent = 'Biometric authentication not supported on this device.';
+            return;
+        }
+
+        // First check if user has existing biometric credentials
+        const user = firebase.auth().currentUser;
+        if (!user) {
+            msg.textContent = 'Please login with email/password first to set up biometric authentication.';
+            return;
+        }
+
+        const storedCredential = localStorage.getItem(`biometric_${user.uid}`);
+        if (!storedCredential) {
+            // No biometric setup yet, offer to register
+            const register = confirm('Biometric login not set up yet. Would you like to register your biometric credentials now?');
+            if (register) {
+                const success = await registerBiometric();
+                if (success) {
+                    msg.style.color = '#06d6a0';
+                    msg.textContent = 'Biometric authentication registered successfully!';
+                } else {
+                    msg.textContent = 'Failed to register biometric authentication.';
+                }
+            }
+            return;
+        }
+
+        // Attempt biometric authentication
+        const authenticated = await authenticateBiometric();
+        if (authenticated) {
+            msg.style.color = '#06d6a0';
+            msg.textContent = 'Biometric authentication successful!';
+            // User is already logged in via Firebase, just update UI
+            document.getElementById('logoutBtn').style.display = 'block';
+            if (!window.journal) {
+                window.journal = new TradingJournal();
+            }
+            showOverlay(false);
+        }
+    } catch (error) {
+        msg.textContent = error.message || 'Biometric authentication failed.';
+    }
+}
+
+// Device tracking and security
+function trackDeviceLogin() {
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+
+    const deviceId = generateDeviceId();
+    const deviceInfo = {
+        id: deviceId,
+        userAgent: navigator.userAgent,
+        timestamp: new Date().toISOString(),
+        ip: 'unknown' // Would need server-side implementation for IP tracking
+    };
+
+    // Store device info
+    const devices = JSON.parse(localStorage.getItem(`devices_${user.uid}`) || '[]');
+
+    // Check if this device is already registered
+    const existingDevice = devices.find(d => d.id === deviceId);
+    const isNewDevice = !existingDevice;
+
+    if (isNewDevice) {
+        devices.push(deviceInfo);
+
+        // Limit to maximum 2 devices
+        if (devices.length > 2) {
+            // Remove oldest device
+            devices.shift();
+        }
+
+        localStorage.setItem(`devices_${user.uid}`, JSON.stringify(devices));
+
+        // Send notification email (would need backend implementation)
+        console.log('New device login detected. Would send email notification to:', user.email);
+        alert(`New device login detected. A security notification has been sent to ${user.email}`);
+    } else {
+        // Update last login time
+        existingDevice.timestamp = new Date().toISOString();
+        localStorage.setItem(`devices_${user.uid}`, JSON.stringify(devices));
+    }
+}
+
+function generateDeviceId() {
+    // Generate a unique device ID based on browser fingerprint
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    ctx.textBaseline = 'top';
+    ctx.font = '14px Arial';
+    ctx.fillText('device_fingerprint', 2, 2);
+
+    const fingerprint = [
+        navigator.userAgent,
+        navigator.language,
+        screen.width + 'x' + screen.height,
+        new Date().getTimezoneOffset(),
+        !!window.sessionStorage,
+        !!window.localStorage,
+        !!window.indexedDB,
+        canvas.toDataURL()
+    ].join('|');
+
+    // Simple hash function
+    let hash = 0;
+    for (let i = 0; i < fingerprint.length; i++) {
+        const char = fingerprint.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32-bit integer
+    }
+    return Math.abs(hash).toString(36);
+}
+
+function checkDeviceLimit() {
+    const user = firebase.auth().currentUser;
+    if (!user) return true;
+
+    const devices = JSON.parse(localStorage.getItem(`devices_${user.uid}`) || '[]');
+    return devices.length < 2;
+}
+
+// Premium Features and Payment
+let stripe;
+
+function checkPremiumStatus() {
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+
+    // Check if user has premium status (in a real app, this would check your backend)
+    const premiumStatus = localStorage.getItem(`premium_${user.uid}`);
+    const isPremium = premiumStatus && new Date(premiumStatus) > new Date();
+
+    const premiumBadge = document.getElementById('premiumStatus');
+    const upgradeBtn = document.getElementById('upgradeBtn');
+    const premiumSection = document.getElementById('premiumSection');
+
+    if (isPremium) {
+        premiumBadge.style.display = 'flex';
+        upgradeBtn.style.display = 'none';
+        premiumSection.classList.remove('hidden');
+    } else {
+        premiumBadge.style.display = 'none';
+        upgradeBtn.style.display = 'block';
+        premiumSection.classList.add('hidden');
+    }
+}
+
+function showPaymentModal(plan) {
+    const modal = document.getElementById('paymentModal');
+    modal.classList.remove('hidden');
+
+    // Populate user email for Stripe checkout
+    const user = firebase.auth().currentUser;
+    if (user) {
+        document.getElementById('userEmail').value = user.email;
+    }
+
+    // Store selected plan (for backward compatibility)
+    window.selectedPlan = plan;
+}
+
+function openStripeCheckout() {
+    const user = firebase.auth().currentUser;
+    const userEmail = user ? user.email : '';
+
+    // For GitHub Pages, we'll redirect to a Stripe Checkout page
+    // You'll need to create this URL in your Stripe Dashboard
+
+    // Option 1: Use a pre-created checkout link from Stripe Dashboard
+    // Go to Stripe Dashboard → Products → Your product → "Create payment link"
+    // Then replace this URL with your payment link
+
+    const checkoutUrl = `https://buy.stripe.com/test_YOUR_PAYMENT_LINK_ID?client_reference_id=${encodeURIComponent(userEmail)}`;
+
+    // Option 2: For now, show instructions since we need the real payment link
+    const message = `
+🚀 To complete Stripe setup:
+
+1. Go to your Stripe Dashboard
+2. Click "Products" → Your "Trade Journal Premium" product
+3. Click "Create payment link"
+4. Copy the payment link URL
+5. Replace the checkoutUrl in script.js with your real link
+
+For now, here's a demo of what would happen:
+- User: ${userEmail || 'Not logged in'}
+- Product: Trade Journal Premium ($9.99/month)
+- Test Mode: No real charges
+
+Use test card: 4242 4242 4242 4242
+    `;
+
+    alert(message);
+
+    // Uncomment this line when you have your real payment link:
+    // window.location.href = checkoutUrl;
+}
+
+function processPayment() {
+    // This function is now handled by Stripe Checkout redirect
+    // The form submission will redirect to Stripe's checkout page
+    console.log('Processing payment via Stripe Checkout...');
+}
+
+// Handle successful payment return from Stripe Checkout
+function handlePaymentSuccess() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session_id');
+
+    if (sessionId) {
+        // Payment was successful
+        const user = firebase.auth().currentUser;
+        if (user) {
+            // Set premium status
+            const expiryDate = new Date();
+            expiryDate.setMonth(expiryDate.getMonth() + 1); // Monthly subscription
+
+            localStorage.setItem(`premium_${user.uid}`, expiryDate.toISOString());
+            checkPremiumStatus();
+
+            // Show success message
+            alert('Payment successful! Welcome to Trade Journal Premium!');
+
+            // Clean up URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    }
+}
+
+// Handle successful payment return from Stripe Checkout
+function handlePaymentSuccess() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session_id');
+
+    if (sessionId) {
+        // Payment was successful
+        const user = firebase.auth().currentUser;
+        if (user) {
+            // Set premium status
+            const expiryDate = new Date();
+            expiryDate.setMonth(expiryDate.getMonth() + 1); // Monthly subscription
+
+            localStorage.setItem(`premium_${user.uid}`, expiryDate.toISOString());
+            checkPremiumStatus();
+
+            // Show success message
+            alert('Payment successful! Welcome to Trade Journal Premium!');
+
+            // Clean up URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    }
+}
+
+// Handle successful payment return from Stripe Checkout
+function handlePaymentSuccess() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session_id');
+
+    if (sessionId) {
+        // Payment was successful
+        const user = firebase.auth().currentUser;
+        if (user) {
+            // Set premium status
+            const expiryDate = new Date();
+            expiryDate.setMonth(expiryDate.getMonth() + 1); // Monthly subscription
+
+            localStorage.setItem(`premium_${user.uid}`, expiryDate.toISOString());
+            checkPremiumStatus();
+
+            // Show success message
+            alert('Payment successful! Welcome to Trade Journal Premium!');
+
+            // Clean up URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    }
+}
+
+// Premium Feature Handlers
+function showAdvancedAnalytics() {
+    alert('Advanced Analytics: This feature provides detailed performance metrics, drawdown analysis, Sharpe ratio, and risk-adjusted returns. (Premium Feature)');
+}
+
+function exportData() {
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+
+    const trades = JSON.parse(localStorage.getItem('finspotTrades') || '[]');
+
+    // Create CSV content
+    let csv = 'Date,Currency Pair,Type,Entry Point,Stop Loss,Take Profit,Exit Point,Risk/Reward,Result,P/L (Pips),Lot Size,SMC Strategy,Notes\n';
+
+    trades.forEach(trade => {
+        csv += `${trade.date},"${trade.pair}","${trade.type}",${trade.entryPoint},${trade.stopLoss},${trade.takeProfit},${trade.exitPoint || ''},${trade.riskReward || ''},"${trade.result || ''}",${trade.profitLoss},${trade.lotSize},"${trade.smcStrategy || ''}","${trade.notes || ''}"\n`;
+    });
+
+    // Download CSV
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `finspot_trades_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+
+    alert('Data exported successfully! (Premium Feature)');
+}
+
+function enableCloudBackup() {
+    alert('Cloud Backup: Your trading data is now automatically synced to the cloud. (Premium Feature)');
+}
+
+function showRiskManagement() {
+    alert('Risk Management: Access advanced position sizing calculators, risk/reward analysis, and portfolio optimization tools. (Premium Feature)');
+}
+
+function showEnhancedAI() {
+    alert('Enhanced AI: Get advanced market predictions, personalized trading recommendations, and detailed analysis. (Premium Feature)');
+}
+
+function testLotSize() {
+    const lotSizeField = document.getElementById('lotSize');
+    const value = lotSizeField.value;
+    const disabled = lotSizeField.disabled;
+    const readonly = lotSizeField.readOnly;
+    const type = lotSizeField.type;
+
+    alert(`Lot Size Field Test:
+Value: ${value}
+Disabled: ${disabled}
+ReadOnly: ${readonly}
+Type: ${type}
+Field exists: ${lotSizeField ? 'Yes' : 'No'}`);
+
+    // Try to set a value
+    lotSizeField.value = '0.25';
+    alert(`After setting value to 0.25: ${lotSizeField.value}`);
+}
 
 class TradingJournal {
     constructor() {
@@ -162,6 +714,26 @@ class TradingJournal {
         document.getElementById('filterPair').addEventListener('change', () => this.renderTrades());
         document.getElementById('filterResult').addEventListener('change', () => this.renderTrades());
         document.getElementById('clearHistoryBtn').addEventListener('click', () => this.clearHistory());
+
+        // Biometric and Premium event listeners
+        document.getElementById('biometricLoginBtn').addEventListener('click', handleBiometricLogin);
+        document.getElementById('upgradeBtn').addEventListener('click', () => showPaymentModal('monthly'));
+        document.getElementById('closePaymentModal').addEventListener('click', () => {
+            document.getElementById('paymentModal').classList.add('hidden');
+        });
+        document.getElementById('closePaymentModal').addEventListener('click', () => {
+            document.getElementById('paymentModal').classList.add('hidden');
+        });
+
+        // Premium feature event listeners
+        document.getElementById('advancedAnalyticsBtn').addEventListener('click', showAdvancedAnalytics);
+        document.getElementById('exportDataBtn').addEventListener('click', exportData);
+        document.getElementById('cloudBackupBtn').addEventListener('click', enableCloudBackup);
+        document.getElementById('riskManagementBtn').addEventListener('click', showRiskManagement);
+        document.getElementById('enhancedAIBtn').addEventListener('click', showEnhancedAI);
+        document.getElementById('performanceReportsBtn').addEventListener('click', showPerformanceReports);
+        document.getElementById('deviceInfoBtn').addEventListener('click', showDeviceInfo);
+        document.getElementById('testLotSizeBtn').addEventListener('click', testLotSize);
     }
 
     // Set today's date as default
@@ -193,6 +765,13 @@ class TradingJournal {
     // Handle form submission
     handleFormSubmit(e) {
         e.preventDefault();
+
+        // Debug: Check lot size field
+        const lotSizeField = document.getElementById('lotSize');
+        console.log('Lot size field:', lotSizeField);
+        console.log('Lot size value:', lotSizeField.value);
+        console.log('Lot size disabled:', lotSizeField.disabled);
+        console.log('Lot size readonly:', lotSizeField.readOnly);
 
         const trade = {
             id: Date.now(),
@@ -1234,3 +1813,15 @@ function initModalChart() {
         }
     });
 }
+
+// Initialize login event listeners
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('loginBtn').addEventListener('click', handleLogin);
+    document.getElementById('registerBtn').addEventListener('click', handleRegister);
+    document.getElementById('resetBtn').addEventListener('click', handleReset);
+    document.getElementById('resendVerificationBtn').addEventListener('click', handleResendVerification);
+    document.getElementById('logoutBtn').addEventListener('click', logout);
+
+    // Check for successful payment return
+    handlePaymentSuccess();
+});

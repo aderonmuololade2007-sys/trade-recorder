@@ -754,3 +754,170 @@ html, body {
 .trade-card {
     animation: fadeIn 0.3s ease;
 }
+
+/* ============= PREMIUM FEATURES ============= */
+.btn-premium {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.btn-premium:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.premium-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.premium-badge {
+    background: linear-gradient(135deg, #ffd700 0%, #ffb347 100%);
+    color: #1b4332;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 0.85rem;
+    box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+}
+
+.premium-section {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    padding: 2rem;
+    margin: 2rem 0;
+    border: 2px solid #dee2e6;
+}
+
+.premium-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.premium-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+    border: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.premium-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(27, 67, 50, 0.15);
+}
+
+.premium-card h3 {
+    color: var(--forest-main);
+    margin-bottom: 0.5rem;
+}
+
+.premium-card p {
+    color: var(--text-light);
+    margin-bottom: 1rem;
+    line-height: 1.5;
+}
+
+/* ============= PAYMENT MODAL ============= */
+.payment-modal {
+    max-width: 500px;
+    padding: 2rem;
+}
+
+.product {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border: 2px solid #e9ecef;
+}
+
+.product svg {
+    flex-shrink: 0;
+}
+
+.product .description h3 {
+    margin: 0 0 0.5rem 0;
+    color: var(--forest-main);
+    font-size: 1.4rem;
+}
+
+.product .description h5 {
+    margin: 0 0 0.5rem 0;
+    color: var(--forest-dark);
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.product .description p {
+    margin: 0;
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
+#stripeCheckoutForm {
+    text-align: center;
+}
+
+#checkout-and-portal-button {
+    width: 100%;
+    margin-top: 1rem;
+}
+
+/* ============= BIOMETRIC STYLES ============= */
+#biometricLoginBtn {
+    position: relative;
+    overflow: hidden;
+}
+
+#biometricLoginBtn::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+#biometricLoginBtn:hover::before {
+    left: 100%;
+}
+
+/* ============= RESPONSIVE DESIGN ============= */
+@media (max-width: 768px) {
+    .premium-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .pricing-plans {
+        grid-template-columns: 1fr;
+    }
+
+    .plan-card.featured {
+        transform: none;
+    }
+
+    #deviceInfoBtn {
+        display: none; /* Hide on mobile for cleaner UI */
+    }
+
+    #testLotSizeBtn {
+        display: none; /* Hide on mobile for cleaner UI */
+    }
+}

@@ -3,15 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Finspot Trading Journal - Forex Trading with AI</title>
+    <title>Trade Journal - Forex Trading with AI</title>
     <link rel="stylesheet" href="style.css">
+    <script src="config.js"></script>
     <!-- Firebase App (the core Firebase SDK) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <!-- Firebase Authentication SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
     <script>
-      // Firebase project configuration
-      const firebaseConfig = {
+      // Initialize Firebase with config
+      const firebaseConfig = window.appConfig ? window.appConfig.firebase : {
         apiKey: "AIzaSyC_4SayVRS_pxja8ziAu0f4mFivhGNPFxo",
         authDomain: "trade-recorder-28cfe.firebaseapp.com",
         projectId: "trade-recorder-28cfe",
@@ -28,12 +29,16 @@
         <!-- Login overlay -->
         <div id="loginOverlay" class="login-overlay hidden">
             <div class="login-box">
-                <h2>Finspot Login</h2>
+                <h2>Trade Journal Login</h2>
                 <div id="loginMessage" class="login-message"></div>
                 <input type="email" id="loginEmail" placeholder="Email address">
                 <input type="password" id="loginPassword" placeholder="Password">
                 <button id="loginBtn" class="btn-submit">Login</button>
                 <button id="registerBtn" class="btn-submit">Register</button>
+                <button id="biometricLoginBtn" class="btn-submit" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin-top: 0.5rem;">
+                    🔐 Biometric Login
+                </button>
+                <button id="resendVerificationBtn" class="btn-submit" style="margin-top:0.5rem; font-size:0.85rem;background:#f77f00;color:white;border:none;text-decoration:none;display:none;">Resend Verification Email</button>
                 <button id="resetBtn" class="btn-submit" style="margin-top:0.5rem; font-size:0.85rem;background:transparent;color:var(--forest-dark);border:none;text-decoration:underline;">Forgot password?</button>
             </div>
         </div>
@@ -49,10 +54,16 @@
                     </svg>
                 </div>
                 <div>
-                    <h1>📊 Finspot Trading Journal</h1>
+                    <h1>📊 Trade Journal</h1>
                     <p>AI-Powered Forex Trading Journal with Smart Money Concept Analysis</p>
                 </div>
-                <button id="logoutBtn" class="btn-danger" style="margin-left:auto;">Logout</button>
+                <div class="premium-status" id="premiumStatus" style="display: none;">
+                    <span class="premium-badge">⭐ Premium</span>
+                </div>
+                <button id="deviceInfoBtn" class="btn-ai" style="margin-right: 0.5rem; font-size: 0.8rem;">Device Info</button>
+                <button id="testLotSizeBtn" class="btn-ai" style="margin-right: 0.5rem; font-size: 0.8rem;">Test Lot Size</button>
+                <button id="upgradeBtn" class="btn-premium" style="margin-left: auto; display: none;">Upgrade to Premium</button>
+                <button id="logoutBtn" class="btn-danger">Logout</button>
             </div>
         </header>
 
@@ -156,11 +167,11 @@
             <div class="content-grid">
                 <!-- AI Assistant Panel -->
                 <section class="ai-section">
-                    <h2>🤖 Finspot AI Assistant</h2>
+                    <h2>🤖 Trade Journal AI Assistant</h2>
                     <div class="ai-container">
                         <div class="ai-input-group">
-                            <input type="text" id="aiQuestion" placeholder="Ask Finspot AI for trade suggestions...">
-                            <button id="askAiBtn" class="btn-ai">Ask Finspot AI</button>
+                            <input type="text" id="aiQuestion" placeholder="Ask Trade Journal AI for trade suggestions...">
+                            <button id="askAiBtn" class="btn-ai">Ask Trade Journal AI</button>
                         </div>
                         <div id="aiResponse" class="ai-response"></div>
                     </div>
@@ -200,14 +211,79 @@
                 </section>
             </div>
 
-            <!-- Fullscreen modal for trade graph -->
-            <div id="tradeModal" class="modal hidden">
-                <div class="modal-content">
-                    <button id="closeTradeModal" class="modal-close">✕</button>
-                    <h3 style="color:var(--forest-dark); margin-bottom:0.5rem;">Trade History Graph</h3>
-                    <canvas id="tradeChartModal" style="width:100%;height:420px;"></canvas>
+            <!-- Premium Payment Modal -->
+            <div id="paymentModal" class="modal hidden">
+                <div class="modal-content payment-modal">
+                    <button id="closePaymentModal" class="modal-close">✕</button>
+                    <h3>Upgrade to Trade Journal Premium</h3>
+
+                    <!-- Product Display -->
+                    <div class="product">
+                        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="14px" height="16px" viewBox="0 0 14 16" version="1.1">
+                            <defs/>
+                            <g id="Flow" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                                <g id="0-Default" transform="translate(-121.000000, -40.000000)" fill="#E184DF">
+                                    <path d="M127,50 L126,50 C123.238576,50 121,47.7614237 121,45 C121,42.2385763 123.238576,40 126,40 L135,40 L135,56 L133,56 L133,42 L129,42 L129,56 L127,56 L127,50 Z M127,48 L127,42 L126,42 C124.343146,42 123,43.3431458 123,45 C123,46.6568542 124.343146,48 126,48 L127,48 Z" id="Pilcrow"/>
+                                </g>
+                            </g>
+                        </svg>
+                        <div class="description">
+                            <h3>Premium Journal</h3>
+                            <h5>$9.99 / month</h5>
+                            <p>Advanced analytics, data export, cloud backup, and more!</p>
+                            <small style="color: #666; font-size: 0.8em;">⚠️ Currently in test mode - no real charges</small>
+                        </div>
+                    </div>
+
+                    <!-- Stripe Checkout Form (GitHub Pages Version) -->
+                    <form id="stripeCheckoutForm" action="https://js.stripe.com/v3/" method="GET" target="_blank">
+                        <input type="hidden" name="lookup_key" value="premium_journal" />
+                        <input type="hidden" name="user_email" id="userEmail" value="" />
+                        <button id="checkout-and-portal-button" type="button" class="btn-premium" onclick="openStripeCheckout()">
+                            Subscribe Now (Test Mode)
+                        </button>
+                    </form>
+
+                    <div id="paymentMessage"></div>
                 </div>
             </div>
+
+            <!-- Premium Features Section -->
+            <section id="premiumSection" class="premium-section hidden">
+                <h2>⭐ Premium Features</h2>
+                <div class="premium-grid">
+                    <div class="premium-card">
+                        <h3>📊 Advanced Analytics</h3>
+                        <p>Detailed performance metrics, drawdown analysis, and risk-adjusted returns.</p>
+                        <button id="advancedAnalyticsBtn" class="btn-premium">View Analytics</button>
+                    </div>
+                    <div class="premium-card">
+                        <h3>💾 Data Export</h3>
+                        <p>Export your trading data to CSV, PDF reports, and Excel formats.</p>
+                        <button id="exportDataBtn" class="btn-premium">Export Data</button>
+                    </div>
+                    <div class="premium-card">
+                        <h3>☁️ Cloud Backup</h3>
+                        <p>Automatic cloud synchronization and backup of all your trading data.</p>
+                        <button id="cloudBackupBtn" class="btn-premium">Enable Backup</button>
+                    </div>
+                    <div class="premium-card">
+                        <h3>🎯 Risk Management</h3>
+                        <p>Advanced position sizing, risk calculators, and portfolio optimization.</p>
+                        <button id="riskManagementBtn" class="btn-premium">Risk Tools</button>
+                    </div>
+                    <div class="premium-card">
+                        <h3>🤖 Enhanced AI</h3>
+                        <p>Advanced AI insights, market predictions, and personalized recommendations.</p>
+                        <button id="enhancedAIBtn" class="btn-premium">AI Insights</button>
+                    </div>
+                    <div class="premium-card">
+                        <h3>📈 Performance Reports</h3>
+                        <p>Monthly and quarterly performance reports with detailed breakdowns.</p>
+                        <button id="performanceReportsBtn" class="btn-premium">View Reports</button>
+                    </div>
+                </div>
+            </section>
 
             <!-- Trade History -->
             <section class="history-section">
@@ -235,12 +311,14 @@
 
         <!-- Footer -->
         <footer class="footer">
-            <p>&copy; 2026 Finspot Trading Journal | AI-Powered Forex Trading Analysis</p>
+            <p>&copy; 2026 Trade Journal | AI-Powered Forex Trading Analysis</p>
         </footer>
     </div>
 
     <!-- Chart.js for trade pattern visualization -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Stripe for payment processing -->
+    <script src="https://js.stripe.com/v3/"></script>
     <script src="script.js"></script>
 </body>
 </html>
