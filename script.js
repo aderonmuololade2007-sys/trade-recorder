@@ -1848,9 +1848,36 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Skipping authentication for testing');
         document.getElementById('logoutBtn').style.display = 'block';
         if (!window.journal) {
-            window.journal = new TradingJournal();
+            try {
+                window.journal = new TradingJournal();
+                console.log('TradingJournal created successfully');
+            } catch (error) {
+                console.error('Error creating TradingJournal:', error);
+            }
         }
         showOverlay(false);
+        
+        // Force show main content
+        setTimeout(() => {
+            const mainContent = document.querySelector('.main-content');
+            if (mainContent) {
+                mainContent.style.display = 'block';
+                mainContent.style.visibility = 'visible';
+                mainContent.style.opacity = '1';
+                console.log('Main content forced visible');
+            }
+            
+            // Force show statistics
+            const statsElements = ['totalTrades', 'winRate', 'totalPL', 'avgRR', 'avgLot'];
+            statsElements.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.style.display = 'inline';
+                    el.style.visibility = 'visible';
+                }
+            });
+            console.log('Statistics elements forced visible');
+        }, 100);
     });
 
     // Check for successful payment return
