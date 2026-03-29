@@ -1194,24 +1194,9 @@ class TradingJournal {
 
         this.chart.options.plugins = this.chart.options.plugins || {};
         this.chart.options.plugins.tooltip = {
-            callbacks: {
-                label: (ctx) => {
-                    const idx = ctx.dataIndex;
-                    const trade = sorted[idx];
-                    if (!trade) return '';
-                    if (ctx.datasetIndex === 0) {
-                        return `Lot Size: ${trade.lotSize}`;
-                    }
-                    const pl = (trade.profitLoss || 0);
-                    return `${trade.pair} • ${trade.type} • P/L: ${pl >= 0 ? '+' : ''}${pl} pips`;
-                },
-                afterLabel: (ctx) => {
-                    const idx = ctx.dataIndex;
-                    const trade = sorted[idx];
-                    if (!trade) return '';
-                    return `Entry: ${trade.entryPoint || 'N/A'}  Exit: ${trade.exitPoint || 'N/A'}`;
-                }
-            }
+            enabled: true,
+            mode: 'index',
+            intersect: false
         };
         // make dual-axis
         this.chart.options.scales = this.chart.options.scales || {};
