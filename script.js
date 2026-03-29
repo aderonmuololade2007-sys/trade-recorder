@@ -627,6 +627,33 @@ function showEnhancedAI() {
     alert('Enhanced AI: Get advanced market predictions, personalized trading recommendations, and detailed analysis. (Premium Feature)');
 }
 
+function showDeviceInfo() {
+    const deviceInfo = {
+        userAgent: navigator.userAgent,
+        platform: navigator.platform,
+        language: navigator.language,
+        cookieEnabled: navigator.cookieEnabled,
+        onLine: navigator.onLine,
+        screenWidth: screen.width,
+        screenHeight: screen.height,
+        windowWidth: window.innerWidth,
+        windowHeight: window.innerHeight,
+        localStorage: typeof localStorage !== 'undefined' ? 'Available' : 'Not available',
+        sessionStorage: typeof sessionStorage !== 'undefined' ? 'Available' : 'Not available',
+        indexedDB: typeof indexedDB !== 'undefined' ? 'Available' : 'Not available',
+        webkitIndexedDB: typeof webkitIndexedDB !== 'undefined' ? 'Available' : 'Not available',
+        geolocation: typeof navigator.geolocation !== 'undefined' ? 'Available' : 'Not available',
+        webAuthn: typeof PublicKeyCredential !== 'undefined' ? 'Available' : 'Not available'
+    };
+
+    let infoString = 'Device Information:\n\n';
+    for (const [key, value] of Object.entries(deviceInfo)) {
+        infoString += `${key}: ${value}\n`;
+    }
+
+    alert(infoString);
+}
+
 function testLotSize() {
     const lotSizeField = document.getElementById('lotSize');
     const value = lotSizeField.value;
