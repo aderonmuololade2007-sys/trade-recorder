@@ -627,6 +627,10 @@ function showEnhancedAI() {
     alert('Enhanced AI: Get advanced market predictions, personalized trading recommendations, and detailed analysis. (Premium Feature)');
 }
 
+function showPerformanceReports() {
+    alert('Performance Reports: Generate detailed monthly and quarterly performance reports with charts, drawdown analysis, and trading metrics. (Premium Feature)');
+}
+
 function showDeviceInfo() {
     const deviceInfo = {
         userAgent: navigator.userAgent,
