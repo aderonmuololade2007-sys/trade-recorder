@@ -1,21 +1,21 @@
 /* ============================================
-   FINSPOT TRADING JOURNAL - FOREST GREEN THEME
+   TRADE JOURNAL - DEEP BLUE THEME
    ============================================ */
 
 :root {
-    --forest-dark: #1b4332;
-    --forest-main: #2d6a4f;
-    --forest-light: #40916c;
-    --forest-lighter: #52b788;
-    --forest-accent: #74c69d;
-    --forest-bg: #f1faee;
+    --deep-blue-dark: #0a1929;
+    --deep-blue-main: #1e3a5f;
+    --deep-blue-light: #2c5aa0;
+    --deep-blue-lighter: #4a90e2;
+    --deep-blue-accent: #6bb6ff;
+    --deep-blue-bg: #f0f4ff;
     --success: #06d6a0;
     --danger: #e63946;
     --warning: #f77f00;
     --text-dark: #1b263b;
     --text-light: #818181;
     --border-color: #e0e0e0;
-    --shadow: 0 4px 6px rgba(27, 67, 50, 0.1);
+    --shadow: 0 4px 6px rgba(10, 25, 41, 0.1);
 }
 
 
@@ -29,20 +29,20 @@ html, body {
     width: 100%;
     height: 100%;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, var(--forest-bg) 0%, #e8f5e9 100%);
+    background: linear-gradient(135deg, var(--deep-blue-bg) 0%, #e8f0ff 100%);
     color: var(--text-dark);
     scroll-behavior: smooth;
 }
 
 .header {
-    border-bottom: 3px solid var(--forest-light);
+    border-bottom: 3px solid var(--deep-blue-light);
 }
 
 .container {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    background-color: var(--forest-bg);
+    background-color: var(--deep-blue-bg);
 }
 
 /* ============= LOGIN OVERLAY ============= */
@@ -67,19 +67,19 @@ html, body {
 }
 
 .login-box {
-    background: var(--forest-bg);
+    background: var(--deep-blue-bg);
     padding: 2rem;
     border-radius: 12px;
     width: 90%;
     max-width: 400px;
     text-align: center;
     box-shadow: var(--shadow);
-    border: 2px solid var(--forest-main);
+    border: 2px solid var(--deep-blue-main);
 }
 
 .login-box h2 {
     margin-bottom: 1rem;
-    color: var(--forest-dark);
+    color: var(--deep-blue-dark);
     font-size: 1.5rem;
 }
 
@@ -87,15 +87,15 @@ html, body {
     width: 100%;
     padding: 0.75rem;
     margin-bottom: 1rem;
-    border: 2px solid var(--forest-main);
+    border: 2px solid var(--deep-blue-main);
     border-radius: 8px;
     font-size: 1rem;
 }
 
 .login-box input:focus {
     outline: none;
-    border-color: var(--forest-light);
-    box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.1);
+    border-color: var(--deep-blue-light);
+    box-shadow: 0 0 0 3px rgba(44, 90, 160, 0.1);
 }
 
 .login-message {
@@ -106,16 +106,16 @@ html, body {
 }
 
 .btn-submit {
-    background: linear-gradient(135deg, var(--forest-light) 0%, var(--forest-main) 100%);
+    background: linear-gradient(135deg, var(--deep-blue-light) 0%, var(--deep-blue-main) 100%);
 }
 
 .btn-submit:hover {
-    background: linear-gradient(135deg, var(--forest-main) 0%, var(--forest-light) 100%);
+    background: linear-gradient(135deg, var(--deep-blue-main) 0%, var(--deep-blue-light) 100%);
 }
 
 /* ============= HEADER ============= */
 .header {
-    background: linear-gradient(135deg, var(--forest-dark) 0%, var(--forest-main) 100%);
+    background: linear-gradient(135deg, var(--deep-blue-dark) 0%, var(--deep-blue-main) 100%);
     color: white;
     padding: 3rem 2rem;
     box-shadow: var(--shadow);
@@ -171,11 +171,11 @@ html, body {
     padding: 2rem;
     margin-bottom: 2rem;
     box-shadow: var(--shadow);
-    border-left: 5px solid var(--forest-main);
+    border-left: 5px solid var(--deep-blue-main);
 }
 
 .form-section h2, .history-section h2, .ai-section h2, .stats-section h2 {
-    color: var(--forest-dark);
+    color: var(--deep-blue-dark);
     margin-bottom: 1.5rem;
     font-size: 1.8rem;
     display: flex;
@@ -223,9 +223,9 @@ html, body {
 .form-group select:focus,
 .form-group textarea:focus {
     outline: none;
-    border-color: var(--forest-light);
+    border-color: var(--deep-blue-light);
     background-color: white;
-    box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.1);
+    box-shadow: 0 0 0 3px rgba(44, 90, 160, 0.1);
 }
 
 .form-group textarea {
@@ -254,7 +254,7 @@ html, body {
 
 .btn-submit:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(45, 106, 79, 0.3);
+    box-shadow: 0 6px 12px rgba(44, 90, 160, 0.3);
 }
 
 .btn-submit:active {
@@ -262,13 +262,13 @@ html, body {
 }
 
 .btn-ai {
-    background: var(--forest-light);
+    background: var(--deep-blue-light);
     color: white;
     margin-top: 0.5rem;
 }
 
 .btn-ai:hover {
-    background: var(--forest-main);
+    background: var(--deep-blue-main);
     transform: translateY(-2px);
 }
 
@@ -284,6 +284,32 @@ html, body {
 }
 .btn-danger:hover {
     background: #d62828;
+}
+
+/* Debug Buttons */
+.debug-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+    justify-content: center;
+}
+
+.btn-debug {
+    background: var(--deep-blue-light);
+    color: var(--deep-blue-dark);
+    border: 1px solid var(--deep-blue-main);
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-debug:hover {
+    background: var(--deep-blue-main);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
 }
 
 /* ============= CONTENT GRID ============= */
